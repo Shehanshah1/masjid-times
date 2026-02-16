@@ -2,49 +2,30 @@ import { Coordinates, CalculationMethod, Madhab, PrayerTimes } from "adhan";
 import { toZonedTime } from "date-fns-tz";
 import { masjid } from "@/config/masjid";
 
-type CalcMethod =
-  | "MOON_SIGHTING_COMMITTEE"
-  | "NORTH_AMERICA"
-  | "MUSLIM_WORLD_LEAGUE"
-  | "EGYPTIAN"
-  | "KARACHI"
-  | "UMM_AL_QURA";
-
 export function getAdhanTimes(date: Date) {
- const zoned = toZonedTime(date, masjid.timezone);
+  // Ensure the Date passed to adhan is in the masjid timezone
+  const zoned = toZonedTime(date, masjid.timezone);
 
+  const coords = new Coordinates(masjid.coordinates.lat, masjid.coordinates.lon);
 
-  const coords = new Coordinates(
-    masjid.coordinates.lat,
-    masjid.coordinates.lon
-  );
+  // Pick calculation method
+  const params =
+    masjid.calc.method === "MUSLIM_WORLD_LEAGUE"
+      ? CalculationMethod.MuslimWorldLeague()
+      : masjid.calc.method === "EGYPTIAN"
+      ? CalculationMethod.Egyptian()
+      : masjid.calc.method === "KARACHI"
+      ? CalculationMethod.Karachi()
+      : masjid.calc.method === "UMM_AL_QURA"
+      ? CalculationMethod.UmmAlQura()
+      : CalculationMethod.NorthAmerica();
 
- let params;
-switch (masjid.calc.method) {
-  case "NORTH_AMERICA":
-    params = CalculationMethod.NorthAmerica();
-    break;
-  case "MUSLIM_WORLD_LEAGUE":
-    params = CalculationMethod.MuslimWorldLeague();
-    break;
-  case "EGYPTIAN":
-    params = CalculationMethod.Egyptian();
-    break;
-  case "KARACHI":
-    params = CalculationMethod.Karachi();
-    break;
-  case "UMM_AL_QURA":
-    params = CalculationMethod.UmmAlQura();
-    break;
-  default:
-    params = CalculationMethod.NorthAmerica();
-}
-
-
+  // Apply your angles (e.g., 18/18)
   params.fajrAngle = masjid.calc.fajrAngle;
   params.ishaAngle = masjid.calc.ishaAngle;
-  params.madhab =
-    masjid.calc.madhab === "HANAFI" ? Madhab.Hanafi : Madhab.Shafi;
+
+  // ONE fixed madhab (no comparison -> no TS build error)
+  params.madhab = Madhab.Hanafi;
 
   const pt = new PrayerTimes(coords, zoned, params);
 

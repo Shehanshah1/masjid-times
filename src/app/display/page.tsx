@@ -40,10 +40,7 @@ function formatTime(date: Date) {
 }
 
 function calculateAdhanTimes(date: Date) {
-  const coords = new Coordinates(
-    masjid.coordinates.lat,
-    masjid.coordinates.lon
-  );
+  const coords = new Coordinates(masjid.coordinates.lat, masjid.coordinates.lon);
 
   const params = CalculationMethod.NorthAmerica();
 
@@ -51,7 +48,7 @@ function calculateAdhanTimes(date: Date) {
   params.fajrAngle = masjid.calc.fajrAngle;
   params.ishaAngle = masjid.calc.ishaAngle;
 
-  // Fixed Hanafi Asr (clean, no conditional)
+  // Fixed Hanafi Asr
   params.madhab = Madhab.Hanafi;
 
   const pt = new PrayerTimes(coords, date, params);
@@ -66,15 +63,11 @@ function calculateAdhanTimes(date: Date) {
   };
 }
 
-function getNextPrayer(now: Date, times: ReturnType<typeof calculateAdhanTimes>) {
-  const order: PrayerKey[] = [
-    "fajr",
-    "sunrise",
-    "dhuhr",
-    "asr",
-    "maghrib",
-    "isha",
-  ];
+function getNextPrayer(
+  now: Date,
+  times: ReturnType<typeof calculateAdhanTimes>
+) {
+  const order: PrayerKey[] = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"];
 
   for (const key of order) {
     if (times[key] > now) return key;
@@ -87,7 +80,7 @@ function getNextPrayer(now: Date, times: ReturnType<typeof calculateAdhanTimes>)
 
 export default function DisplayPage() {
   const [jamaat, setJamaat] = useState<Jamaat>(FALLBACK);
-  const [now, setNow] = useState(new Date());
+  const [now, setNow] = useState(() => new Date());
 
   /* ---------- Fetch Jamaat ---------- */
   useEffect(() => {
@@ -99,7 +92,7 @@ export default function DisplayPage() {
         const json = await res.json();
         if (active && json?.data) setJamaat(json.data);
       } catch {
-        // fallback silently
+        // keep fallback
       }
     }
 
@@ -117,8 +110,13 @@ export default function DisplayPage() {
     return () => clearInterval(interval);
   }, []);
 
-  /* ---------- Prayer Times ---------- */
-  const adhanTimes = useMemo(() => calculateAdhanTimes(now), [now]);
+  /* ---------- Prayer Times (calculate once per day) ---------- */
+  const today = useMemo(
+    () => new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+    [now.getFullYear(), now.getMonth(), now.getDate()]
+  );
+
+  const adhanTimes = useMemo(() => calculateAdhanTimes(today), [today]);
   const nextPrayer = getNextPrayer(now, adhanTimes);
 
   const tiles = [
@@ -141,17 +139,12 @@ export default function DisplayPage() {
   return (
     <main className="h-screen w-screen bg-black text-white overflow-hidden">
       <div className="h-full w-full p-10 grid grid-rows-[auto_1fr_auto] gap-8">
-        
         {/* Header */}
         <header className="flex items-center justify-between">
-          <h1 className="text-5xl font-semibold tracking-tight">
-            {masjid.name}
-          </h1>
+          <h1 className="text-5xl font-semibold tracking-tight">{masjid.name}</h1>
 
           <div className="rounded-3xl bg-white/5 border border-white/10 px-8 py-5">
-            <div className="text-5xl font-semibold tabular-nums">
-              {clock}
-            </div>
+            <div className="text-5xl font-semibold tabular-nums">{clock}</div>
           </div>
         </header>
 
@@ -182,11 +175,8 @@ export default function DisplayPage() {
               {jamaat.jummah?.[0]?.salah ?? "—"} (Salah)
             </span>
           </div>
-          <div className="text-xl opacity-70">
-            Next: {nextPrayer.toUpperCase()}
-          </div>
+          <div className="text-xl opacity-70">Next: {nextPrayer.toUpperCase()}</div>
         </footer>
-
       </div>
     </main>
   );
@@ -207,29 +197,24 @@ function Tile({
 }) {
   return (
     <div
-      className={`rounded-3xl p-10 flex flex-col justify-center border transition-all
-        ${
-          highlight
-            ? "bg-emerald-500/10 border-emerald-400/40"
-            : "bg-white/5 border-white/10"
-        }`}
+      className={`rounded-3xl p-10 flex flex-col justify-center border transition-all ${
+        highlight
+          ? "bg-emerald-500/10 border-emerald-400/40"
+          : "bg-white/5 border-white/10"
+      }`}
     >
       <div className="text-4xl font-semibold opacity-90">{title}</div>
 
       <div className="mt-8 grid grid-cols-2 gap-10 items-end">
         <div>
           <div className="text-xl opacity-70">Adhan</div>
-          <div className="mt-3 text-7xl font-semibold tabular-nums">
-            {adhan}
-          </div>
+          <div className="mt-3 text-7xl font-semibold tabular-nums">{adhan}</div>
         </div>
 
         {jamaat ? (
           <div className="text-right">
             <div className="text-xl opacity-70">Jamaat</div>
-            <div className="mt-3 text-7xl font-semibold tabular-nums">
-              {jamaat}
-            </div>
+            <div className="mt-3 text-7xl font-semibold tabular-nums">{jamaat}</div>
           </div>
         ) : (
           <div className="text-right text-6xl opacity-30">—</div>
