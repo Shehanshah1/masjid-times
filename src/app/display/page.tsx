@@ -44,10 +44,8 @@ function getAdhanTimes(date: Date) {
   params.ishaAngle = masjid.calc.ishaAngle;
 
   // Fixed madhab
-  params.madhab =
-    masjid.calc.madhab === "HANAFI"
-      ? Madhab.Hanafi
-      : Madhab.Shafi;
+ params.madhab = Madhab.Hanafi;
+
 
   const pt = new PrayerTimes(coords, date, params);
 
