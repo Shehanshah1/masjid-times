@@ -1,23 +1,38 @@
 import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
-  const { passcode } = await req.json();
+  try {
+    const body = await req.json();
 
-  if (!process.env.ADMIN_PASSCODE) {
-  return Response.json({ ok: false, error: "Missing ADMIN_PASSCODE" }, { status: 500 });
-}
+    const passcode = String(body?.passcode ?? "").trim();
+    const expected = String(process.env.ADMIN_PASSCODE ?? "").trim();
 
-  if (passcode !== process.env.ADMIN_PASSCODE) {
+    if (!expected) {
+      return Response.json(
+        { ok: false, error: "ADMIN_PASSCODE not configured" },
+        { status: 500 }
+      );
+    }
 
-    return Response.json({ ok: false }, { status: 401 });
+    if (passcode !== expected) {
+      return Response.json({ ok: false }, { status: 401 });
+    }
+
+    const cookieStore = await cookies(); // ✅ your Next.js requires await
+
+    cookieStore.set("admin_session", "ok", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 4, // 4 hours
+    });
+
+    return Response.json({ ok: true });
+  } catch {
+    return Response.json(
+      { ok: false, error: "Invalid request" },
+      { status: 400 }
+    );
   }
-
-  const cookieStore = await cookies();
-  cookieStore.set("admin_session", "ok", {
-    httpOnly: true,
-    path: "/",
-    maxAge: 60 * 60 * 4,
-  });
-
-  return Response.json({ ok: true });
 }
