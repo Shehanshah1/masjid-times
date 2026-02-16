@@ -9,10 +9,7 @@ const DEFAULTS = {
 
 export async function GET() {
   // Read the "current" jamaat times from the update route (in-memory store)
-  const res = await fetch("http://localhost:3000/api/jamaat/update", {
-    cache: "no-store",
-  });
-
+  const res = await fetch("/api/jamaat");
   if (!res.ok) {
     return Response.json({ ok: true, data: DEFAULTS });
   }
