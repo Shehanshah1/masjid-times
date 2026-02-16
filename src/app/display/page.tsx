@@ -32,24 +32,23 @@ function fmtTime(d: Date) {
 }
 
 function getAdhanTimes(date: Date) {
-  // Calculate prayer times based on masjid config
-  const coords = new Coordinates(masjid.coordinates.lat, masjid.coordinates.lon);
+  const coords = new Coordinates(
+    masjid.coordinates.lat,
+    masjid.coordinates.lon
+  );
 
-  // Use a method that exists in adhan
-  let params = CalculationMethod.NorthAmerica();
+  const params = CalculationMethod.NorthAmerica();
 
-  // Custom angles if you want (you already set 18/18)
+  // Apply your angles
   params.fajrAngle = masjid.calc.fajrAngle;
   params.ishaAngle = masjid.calc.ishaAngle;
 
-
+  // Fixed madhab
   params.madhab =
-  (masjid.calc.madhab as "SHAFI" | "HANAFI") === "HANAFI"
-    ? Madhab.Hanafi
-    : Madhab.Shafi;
+    masjid.calc.madhab === "HANAFI"
+      ? Madhab.Hanafi
+      : Madhab.Shafi;
 
-
-  // Use local date (adhan uses Date object; formatting handles timezone)
   const pt = new PrayerTimes(coords, date, params);
 
   return {
@@ -61,6 +60,7 @@ function getAdhanTimes(date: Date) {
     isha: pt.isha,
   };
 }
+
 
 export default function DisplayPage() {
   const [jamaat, setJamaat] = useState<Jamaat>(FALLBACK);
