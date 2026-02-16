@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { fmt12From24 } from "@/lib/time";
 
 /* ================= Types ================= */
 
@@ -95,8 +96,10 @@ function TimeField({
           <option>AM</option>
           <option>PM</option>
         </select>
+
+        {/* ✅ Cohesive preview: 02:00 PM style */}
         <div className="flex items-center text-sm opacity-50">
-          ({value})
+          {fmt12From24(value)}
         </div>
       </div>
     </div>
@@ -192,23 +195,37 @@ export default function AdminPage() {
   return (
     <main className="min-h-screen bg-[#0B1220] text-white p-8">
       <div className="max-w-5xl mx-auto space-y-6">
-
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-semibold">Update Jamaat (Iqama) Times</h1>
           <div className="text-sm opacity-70">Logged in ✅</div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          <TimeField label="Fajr" value={jamaat.fajr}
-            onChange={(v) => setJamaat({ ...jamaat, fajr: v })} />
-          <TimeField label="Dhuhr" value={jamaat.dhuhr}
-            onChange={(v) => setJamaat({ ...jamaat, dhuhr: v })} />
-          <TimeField label="Asr" value={jamaat.asr}
-            onChange={(v) => setJamaat({ ...jamaat, asr: v })} />
-          <TimeField label="Maghrib" value={jamaat.maghrib}
-            onChange={(v) => setJamaat({ ...jamaat, maghrib: v })} />
-          <TimeField label="Isha" value={jamaat.isha}
-            onChange={(v) => setJamaat({ ...jamaat, isha: v })} />
+          <TimeField
+            label="Fajr"
+            value={jamaat.fajr}
+            onChange={(v) => setJamaat({ ...jamaat, fajr: v })}
+          />
+          <TimeField
+            label="Dhuhr"
+            value={jamaat.dhuhr}
+            onChange={(v) => setJamaat({ ...jamaat, dhuhr: v })}
+          />
+          <TimeField
+            label="Asr"
+            value={jamaat.asr}
+            onChange={(v) => setJamaat({ ...jamaat, asr: v })}
+          />
+          <TimeField
+            label="Maghrib"
+            value={jamaat.maghrib}
+            onChange={(v) => setJamaat({ ...jamaat, maghrib: v })}
+          />
+          <TimeField
+            label="Isha"
+            value={jamaat.isha}
+            onChange={(v) => setJamaat({ ...jamaat, isha: v })}
+          />
         </div>
 
         {/* Jumu'ah */}
@@ -219,7 +236,10 @@ export default function AdminPage() {
               onClick={() =>
                 setJamaat({
                   ...jamaat,
-                  jummah: [...jamaat.jummah, { khutbah: "12:45", salah: "13:15" }],
+                  jummah: [
+                    ...jamaat.jummah,
+                    { khutbah: "12:45", salah: "13:15" },
+                  ],
                 })
               }
               className="bg-white/10 px-4 py-2 rounded-xl"
@@ -229,7 +249,10 @@ export default function AdminPage() {
           </div>
 
           {jamaat.jummah.map((slot, i) => (
-            <div key={i} className="grid md:grid-cols-2 gap-6 bg-black/30 p-4 rounded-xl">
+            <div
+              key={i}
+              className="grid md:grid-cols-2 gap-6 bg-black/30 p-4 rounded-xl"
+            >
               <TimeField
                 label={`Slot ${i + 1} Khutbah`}
                 value={slot.khutbah}

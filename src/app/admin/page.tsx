@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { fmt12From24 } from "@/lib/time";
 
 type JummahSlot = { khutbah: string; salah: string };
 
@@ -24,8 +25,46 @@ const EMPTY: Jamaat = {
 
 function isLikelyTime(v: string) {
   if (!v) return true; // allow blank while typing
-  // Accept "6:35", "06:35", "13:20" etc.
-  return /^\d{1,2}:\d{2}$/.test(v.trim());
+  return /^\d{1,2}:\d{2}$/.test(v.trim()); // "6:35" / "06:35" / "13:20"
+}
+
+function normalizeTime(v: string) {
+  const s = v.trim();
+  if (!s) return s;
+  const m = s.match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return s;
+  const hh = String(Math.min(23, Math.max(0, parseInt(m[1], 10)))).padStart(2, "0");
+  const mm = String(Math.min(59, Math.max(0, parseInt(m[2], 10)))).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+function sanitizeIncoming(incoming: any): Jamaat {
+  // Hard-safe defaults
+  const safe: Jamaat = {
+    fajr: "",
+    dhuhr: "",
+    asr: "",
+    maghrib: "",
+    isha: "",
+    jummah: [{ khutbah: "", salah: "" }],
+  };
+
+  if (!incoming || typeof incoming !== "object") return safe;
+
+  safe.fajr = typeof incoming.fajr === "string" ? incoming.fajr : "";
+  safe.dhuhr = typeof incoming.dhuhr === "string" ? incoming.dhuhr : "";
+  safe.asr = typeof incoming.asr === "string" ? incoming.asr : "";
+  safe.maghrib = typeof incoming.maghrib === "string" ? incoming.maghrib : "";
+  safe.isha = typeof incoming.isha === "string" ? incoming.isha : "";
+
+  if (Array.isArray(incoming.jummah) && incoming.jummah.length) {
+    safe.jummah = incoming.jummah.map((j: any) => ({
+      khutbah: typeof j?.khutbah === "string" ? j.khutbah : "",
+      salah: typeof j?.salah === "string" ? j.salah : "",
+    }));
+  }
+
+  return safe;
 }
 
 export default function AdminPage() {
@@ -46,10 +85,12 @@ export default function AdminPage() {
     if (!isLikelyTime(data.asr)) bad.push("Asr");
     if (!isLikelyTime(data.maghrib)) bad.push("Maghrib");
     if (!isLikelyTime(data.isha)) bad.push("Isha");
+
     for (let i = 0; i < data.jummah.length; i++) {
       if (!isLikelyTime(data.jummah[i]?.khutbah)) bad.push(`Jumu'ah ${i + 1} Khutbah`);
       if (!isLikelyTime(data.jummah[i]?.salah)) bad.push(`Jumu'ah ${i + 1} Salah`);
     }
+
     return bad;
   }, [data]);
 
@@ -62,22 +103,7 @@ export default function AdminPage() {
       if (!res.ok) throw new Error("Failed to load");
 
       const json = await res.json();
-      const incoming = json?.data;
-
-      if (
-        !incoming ||
-        typeof incoming.fajr !== "string" ||
-        typeof incoming.dhuhr !== "string" ||
-        typeof incoming.asr !== "string" ||
-        typeof incoming.maghrib !== "string" ||
-        typeof incoming.isha !== "string" ||
-        !Array.isArray(incoming.jummah)
-      ) {
-        setData(EMPTY);
-        setStatus("Loaded defaults (invalid data received) ⚠️");
-      } else {
-        setData(incoming as Jamaat);
-      }
+      setData(sanitizeIncoming(json?.data));
     } catch {
       setData(EMPTY);
       setStatus("Could not load jamaat times ⚠️");
@@ -124,13 +150,26 @@ export default function AdminPage() {
       return;
     }
 
+    // Normalize times to HH:MM before saving
+    const payload: Jamaat = {
+      fajr: normalizeTime(data.fajr),
+      dhuhr: normalizeTime(data.dhuhr),
+      asr: normalizeTime(data.asr),
+      maghrib: normalizeTime(data.maghrib),
+      isha: normalizeTime(data.isha),
+      jummah: data.jummah.map((j) => ({
+        khutbah: normalizeTime(j.khutbah),
+        salah: normalizeTime(j.salah),
+      })),
+    };
+
     setSaving(true);
 
     try {
       const res = await fetch("/api/jamaat/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
@@ -149,16 +188,18 @@ export default function AdminPage() {
   }
 
   function addJummahSlot() {
-    setData({
-      ...data,
-      jummah: [...data.jummah, { khutbah: "", salah: "" }],
-    });
+    setData((d) => ({
+      ...d,
+      jummah: [...d.jummah, { khutbah: "", salah: "" }],
+    }));
   }
 
   function removeJummahSlot(idx: number) {
-    const copy = data.jummah.slice();
-    copy.splice(idx, 1);
-    setData({ ...data, jummah: copy.length ? copy : [{ khutbah: "", salah: "" }] });
+    setData((d) => {
+      const copy = d.jummah.slice();
+      copy.splice(idx, 1);
+      return { ...d, jummah: copy.length ? copy : [{ khutbah: "", salah: "" }] };
+    });
   }
 
   return (
@@ -171,7 +212,7 @@ export default function AdminPage() {
               <div className="text-xs text-white/60">Admin Panel</div>
               <h1 className="mt-1 text-2xl font-semibold">Update Jamaat (Iqama) Times</h1>
               <p className="mt-2 text-sm text-white/60">
-                Changes apply immediately (in-memory). For persistence, migrate to KV later.
+                Passcode is read server-side from <span className="font-mono">ADMIN_PASSCODE</span>.
               </p>
             </div>
 
@@ -189,7 +230,7 @@ export default function AdminPage() {
           <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Login</h2>
-              <span className="text-xs text-white/60">Uses ADMIN_PASSCODE (server env)</span>
+              <span className="text-xs text-white/60">Secure cookie session</span>
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
@@ -201,6 +242,7 @@ export default function AdminPage() {
                   onChange={(e) => setPasscode(e.target.value)}
                   placeholder="Enter passcode"
                   type="password"
+                  autoComplete="current-password"
                 />
               </div>
 
@@ -242,36 +284,11 @@ export default function AdminPage() {
 
           {/* Inputs */}
           <div className="mt-5 grid gap-4 md:grid-cols-2">
-            <TimeInput
-              label="Fajr"
-              value={data.fajr}
-              onChange={(v) => setData({ ...data, fajr: v })}
-              disabled={!loggedIn || loading}
-            />
-            <TimeInput
-              label="Dhuhr"
-              value={data.dhuhr}
-              onChange={(v) => setData({ ...data, dhuhr: v })}
-              disabled={!loggedIn || loading}
-            />
-            <TimeInput
-              label="Asr"
-              value={data.asr}
-              onChange={(v) => setData({ ...data, asr: v })}
-              disabled={!loggedIn || loading}
-            />
-            <TimeInput
-              label="Maghrib"
-              value={data.maghrib}
-              onChange={(v) => setData({ ...data, maghrib: v })}
-              disabled={!loggedIn || loading}
-            />
-            <TimeInput
-              label="Isha"
-              value={data.isha}
-              onChange={(v) => setData({ ...data, isha: v })}
-              disabled={!loggedIn || loading}
-            />
+            <TimeInput label="Fajr" value={data.fajr} onChange={(v) => setData({ ...data, fajr: v })} disabled={!loggedIn || loading} />
+            <TimeInput label="Dhuhr" value={data.dhuhr} onChange={(v) => setData({ ...data, dhuhr: v })} disabled={!loggedIn || loading} />
+            <TimeInput label="Asr" value={data.asr} onChange={(v) => setData({ ...data, asr: v })} disabled={!loggedIn || loading} />
+            <TimeInput label="Maghrib" value={data.maghrib} onChange={(v) => setData({ ...data, maghrib: v })} disabled={!loggedIn || loading} />
+            <TimeInput label="Isha" value={data.isha} onChange={(v) => setData({ ...data, isha: v })} disabled={!loggedIn || loading} />
           </div>
 
           {/* Jumuah */}
@@ -279,9 +296,7 @@ export default function AdminPage() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-semibold">Jumu&apos;ah</div>
-                <div className="mt-1 text-xs text-white/60">
-                  Add one or multiple slots
-                </div>
+                <div className="mt-1 text-xs text-white/60">Add one or multiple slots</div>
               </div>
 
               <button
@@ -295,14 +310,9 @@ export default function AdminPage() {
 
             <div className="mt-4 grid gap-3">
               {data.jummah.map((j, idx) => (
-                <div
-                  key={idx}
-                  className="rounded-2xl border border-white/10 bg-black/30 p-4"
-                >
+                <div key={idx} className="rounded-2xl border border-white/10 bg-black/30 p-4">
                   <div className="flex items-center justify-between">
-                    <div className="text-sm font-semibold text-white/85">
-                      Slot {idx + 1}
-                    </div>
+                    <div className="text-sm font-semibold text-white/85">Slot {idx + 1}</div>
 
                     <button
                       className="text-xs text-white/60 hover:text-white disabled:opacity-50"
@@ -350,9 +360,9 @@ export default function AdminPage() {
             </div>
           ) : null}
 
-          {/* Tiny helper */}
           <div className="mt-4 text-xs text-white/50">
-            Time format: <span className="font-mono">HH:MM</span> (e.g. 06:35, 13:20).
+            Time format: <span className="font-mono">HH:MM</span> (e.g. 06:35, 13:20). Preview shows{" "}
+            <span className="font-mono">02:00 PM</span>.
           </div>
         </section>
       </div>
@@ -368,12 +378,19 @@ function TimeInput(props: {
   placeholder?: string;
 }) {
   const isOk = isLikelyTime(props.value);
+  const normalized = isOk ? normalizeTime(props.value) : "";
 
   return (
     <div>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <label className="text-sm text-white/70">{props.label}</label>
-        {!isOk ? <span className="text-xs text-amber-300">HH:MM</span> : null}
+
+        <div className="flex items-center gap-2">
+          {!isOk ? <span className="text-xs text-amber-300">HH:MM</span> : null}
+          {isOk && normalized ? (
+            <span className="text-xs text-white/50 font-mono">{fmt12From24(normalized)}</span>
+          ) : null}
+        </div>
       </div>
 
       <input

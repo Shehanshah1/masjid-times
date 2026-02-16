@@ -1,6 +1,7 @@
 import { Coordinates, CalculationMethod, Madhab, PrayerTimes } from "adhan";
 import { toZonedTime } from "date-fns-tz";
 import { masjid } from "@/config/masjid";
+import { fmtDateTime12 } from "@/lib/time";
 
 export function getAdhanTimes(date: Date) {
   // Ensure the Date passed to adhan is in the masjid timezone
@@ -40,10 +41,5 @@ export function getAdhanTimes(date: Date) {
 }
 
 export function fmtTime(d: Date) {
-  return new Intl.DateTimeFormat("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,        // 🔥 this forces AM/PM
-    timeZone: masjid.timezone,
-  }).format(d);
+  return fmtDateTime12(d, masjid.timezone);
 }
