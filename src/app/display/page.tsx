@@ -166,7 +166,7 @@ export default function DisplayPage() {
                 key={t.key}
                 title={t.title}
                 adhan={adhan}
-                jamaat={t.jamaat}
+                jamaat={"jamaat" in t ? t.jamaat : undefined}
                 highlight={isNext}
               />
             );
