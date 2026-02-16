@@ -42,7 +42,12 @@ function getAdhanTimes(date: Date) {
   params.fajrAngle = masjid.calc.fajrAngle;
   params.ishaAngle = masjid.calc.ishaAngle;
 
-  params.madhab = masjid.calc.madhab === "HANAFI" ? Madhab.Hanafi : Madhab.Shafi;
+
+  params.madhab =
+  (masjid.calc.madhab as "SHAFI" | "HANAFI") === "HANAFI"
+    ? Madhab.Hanafi
+    : Madhab.Shafi;
+
 
   // Use local date (adhan uses Date object; formatting handles timezone)
   const pt = new PrayerTimes(coords, date, params);
