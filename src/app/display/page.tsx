@@ -28,6 +28,52 @@ const FALLBACK: Jamaat = {
   jummah: [{ khutbah: "12:45", salah: "13:15" }],
 };
 
+/* ================= Timezone helpers ================= */
+/**
+ * We want "today" and "now" in the masjid timezone, even if the TV/device is set to a different timezone.
+ * We do that by reading the masjid-timezone wall-clock parts and constructing a Date from those parts.
+ * (This Date represents the same wall-clock time; it’s good for same-day ordering + display logic.)
+ */
+function zonedParts(date: Date, timeZone: string) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+
+  const get = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0);
+
+  return {
+    year: get("year"),
+    month: get("month"),
+    day: get("day"),
+    hour: get("hour"),
+    minute: get("minute"),
+    second: get("second"),
+  };
+}
+
+function nowInMasjidTZ(now: Date) {
+  const p = zonedParts(now, masjid.timezone);
+  return new Date(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+}
+
+function todayInMasjidTZ(now: Date) {
+  const p = zonedParts(now, masjid.timezone);
+  return new Date(p.year, p.month - 1, p.day);
+}
+
+function addDays(d: Date, days: number) {
+  const x = new Date(d);
+  x.setDate(x.getDate() + days);
+  return x;
+}
+
 /* ================= Utilities ================= */
 
 function formatTime(date: Date) {
@@ -39,10 +85,21 @@ function formatTime(date: Date) {
   }).format(date);
 }
 
+function formatClock(date: Date) {
+  return new Intl.DateTimeFormat("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+    timeZone: masjid.timezone,
+  }).format(date);
+}
+
 function calculateAdhanTimes(date: Date) {
   const coords = new Coordinates(masjid.coordinates.lat, masjid.coordinates.lon);
   const params = CalculationMethod.NorthAmerica();
 
+  // Your config-driven angles (e.g., 18°/18°) + Hanafi
   params.fajrAngle = masjid.calc.fajrAngle;
   params.ishaAngle = masjid.calc.ishaAngle;
   params.madhab = Madhab.Hanafi;
@@ -59,10 +116,41 @@ function calculateAdhanTimes(date: Date) {
   };
 }
 
-function getNextPrayer(now: Date, times: ReturnType<typeof calculateAdhanTimes>) {
+function getNextPrayerInfo(
+  now: Date,
+  todayTimes: ReturnType<typeof calculateAdhanTimes>,
+  tomorrowTimes: ReturnType<typeof calculateAdhanTimes>
+): { key: PrayerKey; at: Date } {
   const order: PrayerKey[] = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"];
-  for (const key of order) if (times[key] > now) return key;
-  return "fajr";
+
+  for (const key of order) {
+    if (todayTimes[key] > now) return { key, at: todayTimes[key] };
+  }
+
+  // After Isha -> next is tomorrow Fajr
+  return { key: "fajr", at: tomorrowTimes.fajr };
+}
+
+function msToHMS(ms: number) {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+}
+
+function isValidJamaat(x: any): x is Jamaat {
+  return (
+    x &&
+    typeof x.fajr === "string" &&
+    typeof x.dhuhr === "string" &&
+    typeof x.asr === "string" &&
+    typeof x.maghrib === "string" &&
+    typeof x.isha === "string" &&
+    Array.isArray(x.jummah)
+  );
 }
 
 /* ================= Component ================= */
@@ -71,15 +159,17 @@ export default function DisplayPage() {
   const [jamaat, setJamaat] = useState<Jamaat>(FALLBACK);
   const [now, setNow] = useState(() => new Date());
 
-  // Fetch jamaat
+  // Fetch jamaat (poll)
   useEffect(() => {
     let active = true;
 
     async function load() {
       try {
         const res = await fetch("/api/jamaat", { cache: "no-store" });
+        if (!res.ok) return;
         const json = await res.json();
-        if (active && json?.data) setJamaat(json.data);
+        const data = json?.data;
+        if (active && isValidJamaat(data)) setJamaat(data);
       } catch {
         // keep fallback
       }
@@ -99,14 +189,21 @@ export default function DisplayPage() {
     return () => clearInterval(id);
   }, []);
 
-  // Calculate once per day
-  const today = useMemo(
-    () => new Date(now.getFullYear(), now.getMonth(), now.getDate()),
-    [now.getFullYear(), now.getMonth(), now.getDate()]
+  // Masjid-tz aligned "now" and "today"
+  const nowTz = useMemo(() => nowInMasjidTZ(now), [now]);
+  const todayTz = useMemo(() => todayInMasjidTZ(now), [now]);
+  const tomorrowTz = useMemo(() => addDays(todayTz, 1), [todayTz]);
+
+  // Adhan times for today & tomorrow (for rollover)
+  const adhanToday = useMemo(() => calculateAdhanTimes(todayTz), [todayTz]);
+  const adhanTomorrow = useMemo(() => calculateAdhanTimes(tomorrowTz), [tomorrowTz]);
+
+  const next = useMemo(
+    () => getNextPrayerInfo(nowTz, adhanToday, adhanTomorrow),
+    [nowTz, adhanToday, adhanTomorrow]
   );
 
-  const adhanTimes = useMemo(() => calculateAdhanTimes(today), [today]);
-  const nextPrayer = getNextPrayer(now, adhanTimes);
+  const countdown = useMemo(() => msToHMS(next.at.getTime() - nowTz.getTime()), [next, nowTz]);
 
   const tiles = [
     { key: "fajr", title: "Fajr", jamaat: jamaat.fajr },
@@ -117,17 +214,10 @@ export default function DisplayPage() {
     { key: "isha", title: "Isha", jamaat: jamaat.isha },
   ] as const;
 
-  const clock = new Intl.DateTimeFormat("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-    timeZone: masjid.timezone,
-  }).format(now);
+  const clock = formatClock(now);
 
   return (
     <main className="h-screen w-screen bg-black text-white overflow-hidden">
-      {/* tighter padding so grid always fits */}
       <div className="h-full w-full p-6 grid grid-rows-[auto_1fr_auto] gap-5">
         {/* Header */}
         <header className="flex items-center justify-between">
@@ -139,14 +229,22 @@ export default function DisplayPage() {
             <div className="font-semibold tabular-nums text-[clamp(28px,3vw,56px)]">
               {clock}
             </div>
+            <div className="mt-1 text-[clamp(12px,1.1vw,18px)] opacity-70 tabular-nums">
+              Next: <span className="font-semibold">{next.key.toUpperCase()}</span>{" "}
+              <span className="opacity-70">at</span>{" "}
+              <span className="font-semibold">{formatTime(next.at)}</span>{" "}
+              <span className="opacity-70">(in</span>{" "}
+              <span className="font-semibold">{countdown}</span>
+              <span className="opacity-70">)</span>
+            </div>
           </div>
         </header>
 
-        {/* Tiles: force 3x2 so all 6 always visible */}
+        {/* Tiles */}
         <section className="h-full grid grid-cols-3 grid-rows-2 gap-5 min-h-0">
           {tiles.map((t) => {
-            const adhan = formatTime(adhanTimes[t.key]);
-            const isNext = nextPrayer === t.key;
+            const adhan = formatTime(adhanToday[t.key]);
+            const isNext = next.key === t.key && next.at.getTime() === adhanToday[t.key].getTime();
 
             return (
               <Tile
@@ -161,16 +259,28 @@ export default function DisplayPage() {
         </section>
 
         {/* Footer */}
-        <footer className="rounded-3xl bg-white/5 border border-white/10 px-8 py-4 flex items-center justify-between">
-          <div className="text-[clamp(16px,1.6vw,30px)]">
-            Jumu&apos;ah:{" "}
-            <span className="font-semibold">
-              {jamaat.jummah?.[0]?.khutbah ?? "—"} (Khutbah) •{" "}
-              {jamaat.jummah?.[0]?.salah ?? "—"} (Salah)
-            </span>
+        <footer className="rounded-3xl bg-white/5 border border-white/10 px-8 py-4 flex items-center justify-between gap-8">
+          <div className="min-w-0">
+            <div className="text-[clamp(16px,1.6vw,30px)]">
+              Jumu&apos;ah:{" "}
+              <span className="font-semibold">
+                {jamaat.jummah?.length
+                  ? jamaat.jummah
+                      .slice(0, 3)
+                      .map((j, idx) => `${j.khutbah} (Khutbah) • ${j.salah} (Salah)`)
+                      .join("   |   ")
+                  : "—"}
+              </span>
+            </div>
           </div>
-          <div className="text-[clamp(12px,1.1vw,18px)] opacity-70">
-            Next: {nextPrayer.toUpperCase()}
+
+          <div className="text-right shrink-0">
+            <div className="text-[clamp(12px,1.1vw,18px)] opacity-70">
+              Next Prayer
+            </div>
+            <div className="text-[clamp(16px,1.6vw,28px)] font-semibold tabular-nums">
+              {next.key.toUpperCase()} • {formatTime(next.at)} • {countdown}
+            </div>
           </div>
         </footer>
       </div>
@@ -193,11 +303,12 @@ function Tile({
 }) {
   return (
     <div
-      className={`rounded-3xl border p-6 flex flex-col justify-center min-h-0 ${
+      className={[
+        "rounded-3xl border p-6 flex flex-col justify-center min-h-0 transition-transform duration-300",
         highlight
-          ? "bg-emerald-500/10 border-emerald-400/40"
-          : "bg-white/5 border-white/10"
-      }`}
+          ? "bg-emerald-500/12 border-emerald-300/50 shadow-[0_0_0_1px_rgba(52,211,153,0.25)] scale-[1.01]"
+          : "bg-white/5 border-white/10",
+      ].join(" ")}
     >
       <div className="font-semibold opacity-90 text-[clamp(18px,1.6vw,34px)]">
         {title}

@@ -41,9 +41,9 @@ export function getAdhanTimes(date: Date) {
 
 export function fmtTime(d: Date) {
   return new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
+    hour: "2-digit",
     minute: "2-digit",
-    hour12: true,
+    hour12: true,        // 🔥 this forces AM/PM
     timeZone: masjid.timezone,
   }).format(d);
 }
