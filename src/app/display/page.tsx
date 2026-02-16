@@ -41,14 +41,10 @@ function formatTime(date: Date) {
 
 function calculateAdhanTimes(date: Date) {
   const coords = new Coordinates(masjid.coordinates.lat, masjid.coordinates.lon);
-
   const params = CalculationMethod.NorthAmerica();
 
-  // Conservative 18° / 18°
   params.fajrAngle = masjid.calc.fajrAngle;
   params.ishaAngle = masjid.calc.ishaAngle;
-
-  // Fixed Hanafi Asr
   params.madhab = Madhab.Hanafi;
 
   const pt = new PrayerTimes(coords, date, params);
@@ -63,17 +59,10 @@ function calculateAdhanTimes(date: Date) {
   };
 }
 
-function getNextPrayer(
-  now: Date,
-  times: ReturnType<typeof calculateAdhanTimes>
-) {
+function getNextPrayer(now: Date, times: ReturnType<typeof calculateAdhanTimes>) {
   const order: PrayerKey[] = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"];
-
-  for (const key of order) {
-    if (times[key] > now) return key;
-  }
-
-  return "fajr"; // after isha → next is tomorrow fajr
+  for (const key of order) if (times[key] > now) return key;
+  return "fajr";
 }
 
 /* ================= Component ================= */
@@ -82,7 +71,7 @@ export default function DisplayPage() {
   const [jamaat, setJamaat] = useState<Jamaat>(FALLBACK);
   const [now, setNow] = useState(() => new Date());
 
-  /* ---------- Fetch Jamaat ---------- */
+  // Fetch jamaat
   useEffect(() => {
     let active = true;
 
@@ -97,20 +86,20 @@ export default function DisplayPage() {
     }
 
     load();
-    const interval = setInterval(load, 60_000);
+    const id = setInterval(load, 60_000);
     return () => {
       active = false;
-      clearInterval(interval);
+      clearInterval(id);
     };
   }, []);
 
-  /* ---------- Clock ---------- */
+  // Live clock
   useEffect(() => {
-    const interval = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(interval);
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
   }, []);
 
-  /* ---------- Prayer Times (calculate once per day) ---------- */
+  // Calculate once per day
   const today = useMemo(
     () => new Date(now.getFullYear(), now.getMonth(), now.getDate()),
     [now.getFullYear(), now.getMonth(), now.getDate()]
@@ -138,18 +127,23 @@ export default function DisplayPage() {
 
   return (
     <main className="h-screen w-screen bg-black text-white overflow-hidden">
-      <div className="h-full w-full p-10 grid grid-rows-[auto_1fr_auto] gap-8">
+      {/* tighter padding so grid always fits */}
+      <div className="h-full w-full p-6 grid grid-rows-[auto_1fr_auto] gap-5">
         {/* Header */}
         <header className="flex items-center justify-between">
-          <h1 className="text-5xl font-semibold tracking-tight">{masjid.name}</h1>
+          <h1 className="font-semibold tracking-tight text-[clamp(28px,3.2vw,56px)]">
+            {masjid.name}
+          </h1>
 
-          <div className="rounded-3xl bg-white/5 border border-white/10 px-8 py-5">
-            <div className="text-5xl font-semibold tabular-nums">{clock}</div>
+          <div className="rounded-3xl bg-white/5 border border-white/10 px-6 py-4">
+            <div className="font-semibold tabular-nums text-[clamp(28px,3vw,56px)]">
+              {clock}
+            </div>
           </div>
         </header>
 
-        {/* Prayer Grid */}
-        <section className="grid grid-cols-2 gap-8 h-full">
+        {/* Tiles: force 3x2 so all 6 always visible */}
+        <section className="h-full grid grid-cols-3 grid-rows-2 gap-5 min-h-0">
           {tiles.map((t) => {
             const adhan = formatTime(adhanTimes[t.key]);
             const isNext = nextPrayer === t.key;
@@ -167,15 +161,17 @@ export default function DisplayPage() {
         </section>
 
         {/* Footer */}
-        <footer className="rounded-3xl bg-white/5 border border-white/10 px-10 py-6 flex items-center justify-between">
-          <div className="text-3xl">
+        <footer className="rounded-3xl bg-white/5 border border-white/10 px-8 py-4 flex items-center justify-between">
+          <div className="text-[clamp(16px,1.6vw,30px)]">
             Jumu&apos;ah:{" "}
             <span className="font-semibold">
               {jamaat.jummah?.[0]?.khutbah ?? "—"} (Khutbah) •{" "}
               {jamaat.jummah?.[0]?.salah ?? "—"} (Salah)
             </span>
           </div>
-          <div className="text-xl opacity-70">Next: {nextPrayer.toUpperCase()}</div>
+          <div className="text-[clamp(12px,1.1vw,18px)] opacity-70">
+            Next: {nextPrayer.toUpperCase()}
+          </div>
         </footer>
       </div>
     </main>
@@ -197,27 +193,35 @@ function Tile({
 }) {
   return (
     <div
-      className={`rounded-3xl p-10 flex flex-col justify-center border transition-all ${
+      className={`rounded-3xl border p-6 flex flex-col justify-center min-h-0 ${
         highlight
           ? "bg-emerald-500/10 border-emerald-400/40"
           : "bg-white/5 border-white/10"
       }`}
     >
-      <div className="text-4xl font-semibold opacity-90">{title}</div>
+      <div className="font-semibold opacity-90 text-[clamp(18px,1.6vw,34px)]">
+        {title}
+      </div>
 
-      <div className="mt-8 grid grid-cols-2 gap-10 items-end">
-        <div>
-          <div className="text-xl opacity-70">Adhan</div>
-          <div className="mt-3 text-7xl font-semibold tabular-nums">{adhan}</div>
+      <div className="mt-4 grid grid-cols-2 gap-5 items-end min-h-0">
+        <div className="min-w-0">
+          <div className="opacity-70 text-[clamp(12px,1vw,18px)]">Adhan</div>
+          <div className="mt-2 font-semibold tracking-tight tabular-nums text-[clamp(28px,3vw,64px)] leading-none">
+            {adhan}
+          </div>
         </div>
 
         {jamaat ? (
-          <div className="text-right">
-            <div className="text-xl opacity-70">Jamaat</div>
-            <div className="mt-3 text-7xl font-semibold tabular-nums">{jamaat}</div>
+          <div className="text-right min-w-0">
+            <div className="opacity-70 text-[clamp(12px,1vw,18px)]">Jamaat</div>
+            <div className="mt-2 font-semibold tracking-tight tabular-nums text-[clamp(28px,3vw,64px)] leading-none">
+              {jamaat}
+            </div>
           </div>
         ) : (
-          <div className="text-right text-6xl opacity-30">—</div>
+          <div className="text-right opacity-25 text-[clamp(24px,2.2vw,48px)] leading-none">
+            —
+          </div>
         )}
       </div>
     </div>
