@@ -167,7 +167,7 @@ export default function AdminPage() {
       const json = await res.json().catch(() => ({}));
 
       if (res.ok) {
-        setStatus("Saved ✅ (refresh display/home to see it)");
+        setStatus("Saved ✅ (display and homepage auto-refresh)");
       } else if (res.status === 401) {
         setLoggedIn(false);
         setStatus("Unauthorized ❌ (login again)");
