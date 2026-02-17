@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { fmt12From24 } from "@/lib/time";
 
 /* ================= Types ================= */
@@ -130,7 +130,7 @@ export default function AdminPage() {
       if (res.ok) {
         setLoggedIn(true);
         setStatus("Logged in ✅");
-        load();
+        await load();
       } else {
         setStatus("Wrong passcode ❌");
       }
@@ -141,30 +141,59 @@ export default function AdminPage() {
     }
   }
 
+  useEffect(() => {
+    if (!loggedIn) return;
+    void load();
+  }, [loggedIn]);
+
   async function load() {
-    const res = await fetch("/api/jamaat", { cache: "no-store" });
-    const json = await res.json();
-    if (json?.data) {
-      const data = json.data;
+    try {
+      const res = await fetch("/api/jamaat", { cache: "no-store" });
+      if (!res.ok) throw new Error("Failed to load");
+      const json = await res.json();
+      if (json?.data) {
+        const data = {
+          ...json.data,
+          jummah:
+            !Array.isArray(json.data?.jummah) || json.data.jummah.length < 2
+              ? [...DEFAULT_JUMMAH]
+              : json.data.jummah,
+        };
 
-      // ✅ Ensure we always have TWO jummah slots by default
-      if (!data.jummah || !Array.isArray(data.jummah) || data.jummah.length < 2) {
-        data.jummah = DEFAULT_JUMMAH;
+        setJamaat(data);
       }
-
-      setJamaat(data);
+    } catch {
+      setStatus("Failed to load times ❌");
     }
   }
 
   async function save() {
     setLoading(true);
-    await fetch("/api/jamaat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(jamaat),
-    });
-    setLoading(false);
-    setStatus("Saved ✅");
+    setStatus("");
+
+    try {
+      const res = await fetch("/api/jamaat/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(jamaat),
+      });
+
+      const json = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        setStatus("Saved ✅");
+        await load();
+      } else if (res.status === 401) {
+        setLoggedIn(false);
+        setStatus("Unauthorized ❌ (login again)");
+      } else {
+        setStatus(`Error: ${json.error || res.statusText || "Server error"}`);
+      }
+    } catch {
+      setStatus("Network error ❌");
+    } finally {
+      setLoading(false);
+    }
   }
 
   /* ================= Login Screen ================= */
