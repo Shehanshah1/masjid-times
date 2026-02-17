@@ -29,15 +29,18 @@ const FS_DATA_PATH = path.join(process.cwd(), "data", "jamaat.json");
 // Helper to check if Vercel KV is configured
 const hasKV = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
 
-function isValidJamaat(x: any): x is Jamaat {
+function isValidJamaat(x: unknown): x is Jamaat {
+  if (!x || typeof x !== "object") return false;
+
+  const value = x as Partial<Jamaat> & { jummah?: unknown };
+
   return (
-    x &&
-    typeof x.fajr === "string" &&
-    typeof x.dhuhr === "string" &&
-    typeof x.asr === "string" &&
-    typeof x.maghrib === "string" &&
-    typeof x.isha === "string" &&
-    Array.isArray(x.jummah)
+    typeof value.fajr === "string" &&
+    typeof value.dhuhr === "string" &&
+    typeof value.asr === "string" &&
+    typeof value.maghrib === "string" &&
+    typeof value.isha === "string" &&
+    Array.isArray(value.jummah)
   );
 }
 
@@ -57,7 +60,7 @@ export async function getJamaatTimes(): Promise<Jamaat> {
     const raw = await fs.readFile(FS_DATA_PATH, "utf8");
     const json = JSON.parse(raw);
     if (isValidJamaat(json)) return json;
-  } catch (error) {
+  } catch {
     // File doesn't exist or error reading, ignore
   }
 

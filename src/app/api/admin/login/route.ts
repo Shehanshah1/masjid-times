@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     });
 
     return Response.json({ ok: true });
-  } catch (error) {
+  } catch {
     return Response.json(
       { ok: false, error: "Invalid request" },
       { status: 400 }

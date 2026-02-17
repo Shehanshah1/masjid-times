@@ -1,46 +1,11 @@
 import { getAdhanTimes, fmtTime } from "@/lib/prayer";
 import { masjid } from "@/config/masjid";
-
-type JummahSlot = { khutbah: string; salah: string };
-type Jamaat = {
-  fajr: string;
-  dhuhr: string;
-  asr: string;
-  maghrib: string;
-  isha: string;
-  jummah: JummahSlot[];
-};
-
-const DEFAULTS: Jamaat = {
-  fajr: "06:35",
-  dhuhr: "13:20",
-  asr: "17:15",
-  maghrib: "17:50",
-  isha: "19:15",
-  jummah: [{ khutbah: "12:45", salah: "13:15" }],
-};
-
-function getBaseUrl() {
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return "http://localhost:3000";
-}
-
-async function getJamaat(): Promise<Jamaat> {
-  try {
-    const base = getBaseUrl();
-    const res = await fetch(`${base}/api/jamaat`, { cache: "no-store" });
-    if (!res.ok) return DEFAULTS;
-
-    const json = await res.json();
-    return (json?.data ?? DEFAULTS) as Jamaat;
-  } catch {
-    return DEFAULTS;
-  }
-}
+import { getJamaatTimes } from "@/lib/db";
+import { fmt12From24 } from "@/lib/time";
 
 export default async function Home() {
   const adhan = getAdhanTimes(new Date());
-  const jamaat = await getJamaat();
+  const jamaat = await getJamaatTimes();
 
   const today = new Intl.DateTimeFormat("en-US", {
     weekday: "long",
@@ -51,12 +16,12 @@ export default async function Home() {
   }).format(new Date());
 
   const rows = [
-    { label: "Fajr", adhan: fmtTime(adhan.fajr), jamaat: jamaat.fajr },
+    { label: "Fajr", adhan: fmtTime(adhan.fajr), jamaat: fmt12From24(jamaat.fajr) },
     { label: "Sunrise", adhan: fmtTime(adhan.sunrise) },
-    { label: "Dhuhr", adhan: fmtTime(adhan.dhuhr), jamaat: jamaat.dhuhr },
-    { label: "Asr", adhan: fmtTime(adhan.asr), jamaat: jamaat.asr },
-    { label: "Maghrib", adhan: fmtTime(adhan.maghrib), jamaat: jamaat.maghrib },
-    { label: "Isha", adhan: fmtTime(adhan.isha), jamaat: jamaat.isha },
+    { label: "Dhuhr", adhan: fmtTime(adhan.dhuhr), jamaat: fmt12From24(jamaat.dhuhr) },
+    { label: "Asr", adhan: fmtTime(adhan.asr), jamaat: fmt12From24(jamaat.asr) },
+    { label: "Maghrib", adhan: fmtTime(adhan.maghrib), jamaat: fmt12From24(jamaat.maghrib) },
+    { label: "Isha", adhan: fmtTime(adhan.isha), jamaat: fmt12From24(jamaat.isha) },
   ];
 
   const jummah0 = jamaat.jummah?.[0];
@@ -125,8 +90,8 @@ export default async function Home() {
                 </p>
 
                 <div className="mt-4 grid gap-3">
-                  <InfoRow label="Khutbah" value={jummah0?.khutbah ?? "—"} />
-                  <InfoRow label="Salah" value={jummah0?.salah ?? "—"} />
+                  <InfoRow label="Khutbah" value={jummah0?.khutbah ? fmt12From24(jummah0.khutbah) : "—"} />
+                  <InfoRow label="Salah" value={jummah0?.salah ? fmt12From24(jummah0.salah) : "—"} />
                 </div>
 
                 <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-white/70">

@@ -141,15 +141,18 @@ function msToHMS(ms: number) {
   return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
 }
 
-function isValidJamaat(x: any): x is Jamaat {
+function isValidJamaat(x: unknown): x is Jamaat {
+  if (!x || typeof x !== "object") return false;
+
+  const value = x as Partial<Jamaat> & { jummah?: unknown };
+
   return (
-    x &&
-    typeof x.fajr === "string" &&
-    typeof x.dhuhr === "string" &&
-    typeof x.asr === "string" &&
-    typeof x.maghrib === "string" &&
-    typeof x.isha === "string" &&
-    Array.isArray(x.jummah)
+    typeof value.fajr === "string" &&
+    typeof value.dhuhr === "string" &&
+    typeof value.asr === "string" &&
+    typeof value.maghrib === "string" &&
+    typeof value.isha === "string" &&
+    Array.isArray(value.jummah)
   );
 }
 
@@ -157,11 +160,10 @@ function isValidJamaat(x: any): x is Jamaat {
 
 export default function DisplayPage() {
   const [jamaat, setJamaat] = useState<Jamaat>(FALLBACK);
-  const [now, setNow] = useState<Date | null>(null);
+  const [now, setNow] = useState<Date>(() => new Date());
 
-  // Initial time sync and live clock
+  // Live clock
   useEffect(() => {
-    setNow(new Date());
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
@@ -213,9 +215,6 @@ export default function DisplayPage() {
     { key: "maghrib", title: "Maghrib", jamaat: jamaat.maghrib },
     { key: "isha", title: "Isha", jamaat: jamaat.isha },
   ] as const;
-
-  // Prevent hydration mismatch by showing a black screen until the clock is ready
-  if (!now) return <div className="h-screen w-screen bg-black" />;
 
   const clock = formatClock(now);
 
