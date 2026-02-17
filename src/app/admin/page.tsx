@@ -38,7 +38,7 @@ function normalizeTime(v: string) {
   return `${hh}:${mm}`;
 }
 
-function sanitizeIncoming(incoming: any): Jamaat {
+function sanitizeIncoming(incoming: unknown): Jamaat {
   const safe: Jamaat = {
     fajr: "",
     dhuhr: "",
@@ -50,14 +50,16 @@ function sanitizeIncoming(incoming: any): Jamaat {
 
   if (!incoming || typeof incoming !== "object") return safe;
 
-  safe.fajr = typeof incoming.fajr === "string" ? incoming.fajr : "";
-  safe.dhuhr = typeof incoming.dhuhr === "string" ? incoming.dhuhr : "";
-  safe.asr = typeof incoming.asr === "string" ? incoming.asr : "";
-  safe.maghrib = typeof incoming.maghrib === "string" ? incoming.maghrib : "";
-  safe.isha = typeof incoming.isha === "string" ? incoming.isha : "";
+  const source = incoming as Partial<Jamaat> & { jummah?: unknown };
 
-  if (Array.isArray(incoming.jummah) && incoming.jummah.length) {
-    safe.jummah = incoming.jummah.map((j: any) => ({
+  safe.fajr = typeof source.fajr === "string" ? source.fajr : "";
+  safe.dhuhr = typeof source.dhuhr === "string" ? source.dhuhr : "";
+  safe.asr = typeof source.asr === "string" ? source.asr : "";
+  safe.maghrib = typeof source.maghrib === "string" ? source.maghrib : "";
+  safe.isha = typeof source.isha === "string" ? source.isha : "";
+
+  if (Array.isArray(source.jummah) && source.jummah.length) {
+    safe.jummah = source.jummah.map((j) => ({
       khutbah: typeof j?.khutbah === "string" ? j.khutbah : "",
       salah: typeof j?.salah === "string" ? j.salah : "",
     }));
@@ -173,8 +175,9 @@ export default function AdminPage() {
         // Display the ACTUAL error from server
         setStatus(`Error: ${json.error || res.statusText || "Server error"}`);
       }
-    } catch (e: any) {
-      setStatus(`Network error: ${e.message}`);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "unknown";
+      setStatus(`Network error: ${message}`);
     } finally {
       setSaving(false);
     }

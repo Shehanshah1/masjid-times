@@ -26,17 +26,20 @@ const FALLBACK: Jamaat = {
 
 /* ================= Validation ================= */
 
-function isValidJamaat(x: any): x is Jamaat {
+function isValidJamaat(x: unknown): x is Jamaat {
+  if (!x || typeof x !== "object") return false;
+
+  const value = x as Partial<Jamaat> & { jummah?: unknown };
+
   return (
-    x &&
-    typeof x.fajr === "string" &&
-    typeof x.dhuhr === "string" &&
-    typeof x.asr === "string" &&
-    typeof x.maghrib === "string" &&
-    typeof x.isha === "string" &&
-    Array.isArray(x.jummah) &&
-    x.jummah.every(
-      (j: any) =>
+    typeof value.fajr === "string" &&
+    typeof value.dhuhr === "string" &&
+    typeof value.asr === "string" &&
+    typeof value.maghrib === "string" &&
+    typeof value.isha === "string" &&
+    Array.isArray(value.jummah) &&
+    value.jummah.every(
+      (j) =>
         j &&
         typeof j.khutbah === "string" &&
         typeof j.salah === "string"
@@ -80,8 +83,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
- const cookieStore = await cookies();
-const session = cookieStore.get("admin_session")?.value;
+  const cookieStore = await cookies();
+  const session = cookieStore.get("admin_session")?.value;
 
 
   if (session !== "ok") {
