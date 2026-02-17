@@ -42,17 +42,25 @@ export async function POST(req: Request) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
+  let body: unknown;
+
   try {
-    const body = await req.json();
-    const candidate = body?.data ?? body;
-
-    if (!isValidJamaat(candidate)) {
-      return Response.json({ ok: false, error: "Invalid payload" }, { status: 400 });
-    }
-
-    await saveJamaatTimes(candidate);
-    return Response.json({ ok: true }, { status: 200 });
+    body = await req.json();
   } catch {
     return Response.json({ ok: false, error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const candidate = (body as { data?: unknown })?.data ?? body;
+
+  if (!isValidJamaat(candidate)) {
+    return Response.json({ ok: false, error: "Invalid payload" }, { status: 400 });
+  }
+
+  try {
+    await saveJamaatTimes(candidate);
+    return Response.json({ ok: true }, { status: 200 });
+  } catch (error) {
+    console.error("Failed to update jamaat times:", error);
+    return Response.json({ ok: false, error: "Failed to save times" }, { status: 500 });
   }
 }
