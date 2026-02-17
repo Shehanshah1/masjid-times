@@ -1,35 +1,22 @@
 import { cookies } from "next/headers";
-import { promises as fs } from "fs";
-import path from "path";
-
-type Jamaat = {
-  fajr: string;
-  dhuhr: string;
-  asr: string;
-  maghrib: string;
-  isha: string;
-  jummah: { khutbah: string; salah: string }[];
-};
+import { getJamaatTimes, saveJamaatTimes, type Jamaat } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
-
-/* ================= Fallback ================= */
-
-const FALLBACK: Jamaat = {
-  fajr: "06:35",
-  dhuhr: "13:20",
-  asr: "17:15",
-  maghrib: "17:50",
-  isha: "19:15",
-  jummah: [{ khutbah: "12:45", salah: "13:15" }],
-};
-
-/* ================= Validation ================= */
 
 function isValidJamaat(x: unknown): x is Jamaat {
   if (!x || typeof x !== "object") return false;
 
-  const value = x as Partial<Jamaat> & { jummah?: unknown };
+  const value = x as Partial<Jamaat> & { jummah?: unknown; jummah2?: unknown };
+
+  const isSlotArray = (slots: unknown) =>
+    Array.isArray(slots) &&
+    slots.every(
+      (j) =>
+        j &&
+        typeof j === "object" &&
+        typeof (j as { khutbah?: unknown }).khutbah === "string" &&
+        typeof (j as { salah?: unknown }).salah === "string"
+    );
 
   return (
     typeof value.fajr === "string" &&
@@ -37,48 +24,13 @@ function isValidJamaat(x: unknown): x is Jamaat {
     typeof value.asr === "string" &&
     typeof value.maghrib === "string" &&
     typeof value.isha === "string" &&
-    Array.isArray(value.jummah) &&
-    value.jummah.every(
-      (j) =>
-        j &&
-        typeof j.khutbah === "string" &&
-        typeof j.salah === "string"
-    )
+    isSlotArray(value.jummah) &&
+    (value.jummah2 === undefined || isSlotArray(value.jummah2))
   );
 }
 
-/* ================= Storage =================
-   Persists to: /data/jamaat.json at project root
-   Works great for VPS/local/kiosk.
-   (If hosting is serverless, switch to DB/KV.)
-============================================ */
-
-const DATA_PATH = path.join(process.cwd(), "data", "jamaat.json");
-
-async function ensureDir() {
-  await fs.mkdir(path.dirname(DATA_PATH), { recursive: true });
-}
-
-async function readJamaat(): Promise<Jamaat> {
-  try {
-    const raw = await fs.readFile(DATA_PATH, "utf8");
-    const json = JSON.parse(raw);
-    return isValidJamaat(json) ? json : FALLBACK;
-  } catch {
-    return FALLBACK;
-  }
-}
-
-async function writeJamaat(next: Jamaat) {
-  if (!isValidJamaat(next)) throw new Error("Invalid payload");
-  await ensureDir();
-  await fs.writeFile(DATA_PATH, JSON.stringify(next, null, 2), "utf8");
-}
-
-/* ================= Route handlers ================= */
-
 export async function GET() {
-  const data = await readJamaat();
+  const data = await getJamaatTimes();
   return Response.json({ ok: true, data }, { status: 200 });
 }
 
@@ -86,36 +38,21 @@ export async function POST(req: Request) {
   const cookieStore = await cookies();
   const session = cookieStore.get("admin_session")?.value;
 
-
   if (session !== "ok") {
-    return Response.json(
-      { ok: false, error: "Unauthorized" },
-      { status: 401 }
-    );
+    return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const body = await req.json();
-
-    // Accept BOTH shapes:
-    // 1) direct Jamaat
-    // 2) { data: Jamaat }
     const candidate = body?.data ?? body;
 
     if (!isValidJamaat(candidate)) {
-      return Response.json(
-        { ok: false, error: "Invalid payload" },
-        { status: 400 }
-      );
+      return Response.json({ ok: false, error: "Invalid payload" }, { status: 400 });
     }
 
-    await writeJamaat(candidate);
-
+    await saveJamaatTimes(candidate);
     return Response.json({ ok: true }, { status: 200 });
   } catch {
-    return Response.json(
-      { ok: false, error: "Invalid JSON" },
-      { status: 400 }
-    );
+    return Response.json({ ok: false, error: "Invalid JSON" }, { status: 400 });
   }
 }

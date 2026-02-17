@@ -14,7 +14,7 @@ type Jamaat = {
   maghrib: string;
   isha: string;
   jummah: { khutbah: string; salah: string }[];
-  jummah2: { khutbah: string; salah: string }[];
+  jummah2?: { khutbah: string; salah: string }[];
 };
 
 type PrayerKey = "fajr" | "sunrise" | "dhuhr" | "asr" | "maghrib" | "isha";
@@ -161,11 +161,22 @@ function isValidJamaat(x: unknown): x is Jamaat {
 export default function DisplayPage() {
   const [jamaat, setJamaat] = useState<Jamaat>(FALLBACK);
   const [now, setNow] = useState<Date>(() => new Date());
+  const [isPortraitScreen, setIsPortraitScreen] = useState(false);
 
   // Live clock
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const updateOrientation = () => {
+      setIsPortraitScreen(window.innerHeight > window.innerWidth);
+    };
+
+    updateOrientation();
+    window.addEventListener("resize", updateOrientation);
+    return () => window.removeEventListener("resize", updateOrientation);
   }, []);
 
   // Poll for jamaat updates
@@ -185,7 +196,7 @@ export default function DisplayPage() {
     }
 
     load();
-    const id = setInterval(load, 60_000);
+    const id = setInterval(load, 10_000);
     return () => {
       active = false;
       clearInterval(id);
@@ -220,10 +231,19 @@ export default function DisplayPage() {
 
   return (
     <main className="h-screen w-screen bg-black text-white overflow-hidden">
-      <div className="h-full w-full p-6 grid grid-rows-[auto_1fr_auto] gap-5">
+      <div
+        className={[
+          "h-full w-full p-4 md:p-6 grid gap-4 md:gap-5 grid-rows-[auto_1fr_auto]",
+        ].join(" ")}
+      >
         {/* Header */}
         <header className="flex items-center justify-between">
-          <h1 className="font-semibold tracking-tight text-[clamp(28px,3.2vw,56px)]">
+          <h1
+            className={[
+              "font-semibold tracking-tight",
+              isPortraitScreen ? "text-[clamp(26px,5vw,56px)]" : "text-[clamp(28px,3.2vw,56px)]",
+            ].join(" ")}
+          >
             {masjid.name}
           </h1>
 
@@ -243,7 +263,12 @@ export default function DisplayPage() {
         </header>
 
         {/* Tiles */}
-        <section className="h-full grid grid-cols-3 grid-rows-2 gap-5 min-h-0">
+        <section
+          className={[
+            "h-full min-h-0 grid gap-4 md:gap-5",
+            isPortraitScreen ? "grid-cols-2 grid-rows-3" : "grid-cols-3 grid-rows-2",
+          ].join(" ")}
+        >
           {tiles.map((t) => {
             const adhan = formatTime(adhanToday[t.key]);
             const isNext = next.key === t.key && next.at.getTime() === adhanToday[t.key].getTime();
@@ -263,7 +288,12 @@ export default function DisplayPage() {
         </section>
 
         {/* Footer */}
-        <footer className="rounded-3xl bg-white/5 border border-white/10 px-8 py-4 flex items-center justify-between gap-8">
+        <footer
+          className={[
+            "rounded-3xl bg-white/5 border border-white/10 flex items-center justify-between",
+            isPortraitScreen ? "px-5 py-4 gap-4" : "px-8 py-4 gap-8",
+          ].join(" ")}
+        >
           <div className="min-w-0">
             <div className="text-[clamp(16px,1.6vw,30px)]">
               Jumu&apos;ah:{" "}
