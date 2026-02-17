@@ -1,34 +1,58 @@
-import { Coordinates, CalculationMethod, Madhab, PrayerTimes } from "adhan";
-import { toZonedTime } from "date-fns-tz";
+import { Coordinates, CalculationMethod, Madhab, PrayerTimes, CalculationParameters } from "adhan";
 import { masjid } from "@/config/masjid";
 import { fmtDateTime12 } from "@/lib/time";
 
+/**
+ * Calculates prayer times for a given date based on the masjid's configuration.
+ * @param date - The date for which to calculate times (defaults to UTC).
+ */
 export function getAdhanTimes(date: Date) {
-  // Ensure the Date passed to adhan is in the masjid timezone
-  const zoned = toZonedTime(date, masjid.timezone);
+  // 1. Validate date to prevent library crashes
+  if (!(date instanceof Date) || isNaN(date.getTime())) {
+    throw new Error("Invalid date provided to getAdhanTimes");
+  }
 
+  // 2. Initialize Coordinates
   const coords = new Coordinates(masjid.coordinates.lat, masjid.coordinates.lon);
 
-  // Pick calculation method
-  const params =
-    masjid.calc.method === "MUSLIM_WORLD_LEAGUE"
-      ? CalculationMethod.MuslimWorldLeague()
-      : masjid.calc.method === "EGYPTIAN"
-      ? CalculationMethod.Egyptian()
-      : masjid.calc.method === "KARACHI"
-      ? CalculationMethod.Karachi()
-      : masjid.calc.method === "UMM_AL_QURA"
-      ? CalculationMethod.UmmAlQura()
-      : CalculationMethod.NorthAmerica();
+  // 3. Resolve Calculation Method
+  // We use a mapping or switch to ensure params is a valid CalculationParameters object
+  let params: CalculationParameters;
+  
+  switch (masjid.calc.method) {
+    case "MUSLIM_WORLD_LEAGUE":
+      params = CalculationMethod.MuslimWorldLeague();
+      break;
+    case "EGYPTIAN":
+      params = CalculationMethod.Egyptian();
+      break;
+    case "KARACHI":
+      params = CalculationMethod.Karachi();
+      break;
+    case "UMM_AL_QURA":
+      params = CalculationMethod.UmmAlQura();
+      break;
+    case "NORTH_AMERICA":
+    default:
+      params = CalculationMethod.NorthAmerica();
+  }
 
-  // Apply your angles (e.g., 18/18)
-  params.fajrAngle = masjid.calc.fajrAngle;
-  params.ishaAngle = masjid.calc.ishaAngle;
+  // 4. Apply custom calculation parameters from config
+  if (typeof masjid.calc.fajrAngle === "number") {
+    params.fajrAngle = masjid.calc.fajrAngle;
+  }
+  if (typeof masjid.calc.ishaAngle === "number") {
+    params.ishaAngle = masjid.calc.ishaAngle;
+  }
 
-  // ONE fixed madhab (no comparison -> no TS build error)
-  params.madhab = Madhab.Hanafi;
+  // 5. Set Madhab for Asr calculation (Hanafi vs Shafi)
+  // This affects the shadow length ratio used for the Asr time.
+  params.madhab = masjid.calc.madhab === "HANAFI" ? Madhab.Hanafi : Madhab.Shafi;
 
-  const pt = new PrayerTimes(coords, zoned, params);
+  // 6. Calculate Times
+  // Adhan handles the UTC date internally; timezone conversion happens at the UI layer.
+  const pt = new PrayerTimes(coords, date, params);
+  
 
   return {
     fajr: pt.fajr,
@@ -40,6 +64,11 @@ export function getAdhanTimes(date: Date) {
   };
 }
 
-export function fmtTime(d: Date) {
+/**
+ * Formats a Date object into a 12-hour time string specific to the masjid's timezone.
+ *
+ */
+export function fmtTime(d: Date | null | undefined): string {
+  if (!d) return "—";
   return fmtDateTime12(d, masjid.timezone);
 }
