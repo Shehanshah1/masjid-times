@@ -15,11 +15,11 @@ export type Jamaat = {
 };
 
 const DEFAULTS: Jamaat = {
-  fajr: "06:35",
-  dhuhr: "13:20",
-  asr: "17:15",
-  maghrib: "17:50",
-  isha: "19:15",
+  fajr: "05:30",
+  dhuhr: "12:35",
+  asr: "16:15",
+  maghrib: "17:55",
+  isha: "19:30",
   jummah: [{ khutbah: "12:45", salah: "13:15" }],
   jummah2: [{ khutbah: "13:15", salah: "13:45" }], // Default second slot
 };
