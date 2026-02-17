@@ -24,8 +24,8 @@ const EMPTY: Jamaat = {
 };
 
 function isLikelyTime(v: string) {
-  if (!v) return true; // allow blank while typing
-  return /^\d{1,2}:\d{2}$/.test(v.trim()); // "6:35" / "06:35" / "13:20"
+  if (!v) return true;
+  return /^\d{1,2}:\d{2}$/.test(v.trim());
 }
 
 function normalizeTime(v: string) {
@@ -39,7 +39,6 @@ function normalizeTime(v: string) {
 }
 
 function sanitizeIncoming(incoming: any): Jamaat {
-  // Hard-safe defaults
   const safe: Jamaat = {
     fajr: "",
     dhuhr: "",
@@ -70,10 +69,8 @@ function sanitizeIncoming(incoming: any): Jamaat {
 export default function AdminPage() {
   const [passcode, setPasscode] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
-
   const [status, setStatus] = useState("");
   const [data, setData] = useState<Jamaat>(EMPTY);
-
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [loggingIn, setLoggingIn] = useState(false);
@@ -90,18 +87,15 @@ export default function AdminPage() {
       if (!isLikelyTime(data.jummah[i]?.khutbah)) bad.push(`Jumu'ah ${i + 1} Khutbah`);
       if (!isLikelyTime(data.jummah[i]?.salah)) bad.push(`Jumu'ah ${i + 1} Salah`);
     }
-
     return bad;
   }, [data]);
 
   async function load() {
     setLoading(true);
     setStatus("");
-
     try {
       const res = await fetch("/api/jamaat", { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to load");
-
       const json = await res.json();
       setData(sanitizeIncoming(json?.data));
     } catch {
@@ -119,14 +113,12 @@ export default function AdminPage() {
   async function login() {
     setStatus("");
     setLoggingIn(true);
-
     try {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ passcode }),
       });
-
       if (res.ok) {
         setLoggedIn(true);
         setStatus("Logged in ✅");
@@ -144,13 +136,11 @@ export default function AdminPage() {
 
   async function save() {
     setStatus("");
-
     if (invalidTimes.length > 0) {
       setStatus(`Fix time format: ${invalidTimes.join(", ")} (use HH:MM)`);
       return;
     }
 
-    // Normalize times to HH:MM before saving
     const payload: Jamaat = {
       fajr: normalizeTime(data.fajr),
       dhuhr: normalizeTime(data.dhuhr),
@@ -172,26 +162,26 @@ export default function AdminPage() {
         body: JSON.stringify(payload),
       });
 
+      const json = await res.json().catch(() => ({}));
+
       if (res.ok) {
         setStatus("Saved ✅ (refresh display/home to see it)");
       } else if (res.status === 401) {
         setLoggedIn(false);
         setStatus("Unauthorized ❌ (login again)");
       } else {
-        setStatus("Server error ⚠️");
+        // Display the ACTUAL error from server
+        setStatus(`Error: ${json.error || res.statusText || "Server error"}`);
       }
-    } catch {
-      setStatus("Network error ❌");
+    } catch (e: any) {
+      setStatus(`Network error: ${e.message}`);
     } finally {
       setSaving(false);
     }
   }
 
   function addJummahSlot() {
-    setData((d) => ({
-      ...d,
-      jummah: [...d.jummah, { khutbah: "", salah: "" }],
-    }));
+    setData((d) => ({ ...d, jummah: [...d.jummah, { khutbah: "", salah: "" }] }));
   }
 
   function removeJummahSlot(idx: number) {
@@ -210,12 +200,8 @@ export default function AdminPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <div className="text-xs text-white/60">Admin Panel</div>
-              <h1 className="mt-1 text-2xl font-semibold">Update Jamaat (Iqama) Times</h1>
-              <p className="mt-2 text-sm text-white/60">
-                Passcode is read server-side from <span className="font-mono">ADMIN_PASSCODE</span>.
-              </p>
+              <h1 className="mt-1 text-2xl font-semibold">Update Jamaat Times</h1>
             </div>
-
             <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
               <div className="text-xs text-white/60">Status</div>
               <div className="mt-1 text-sm">
@@ -230,9 +216,7 @@ export default function AdminPage() {
           <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Login</h2>
-              <span className="text-xs text-white/60">Secure cookie session</span>
             </div>
-
             <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
               <div>
                 <label className="text-sm text-white/70">Passcode</label>
@@ -242,10 +226,8 @@ export default function AdminPage() {
                   onChange={(e) => setPasscode(e.target.value)}
                   placeholder="Enter passcode"
                   type="password"
-                  autoComplete="current-password"
                 />
               </div>
-
               <button
                 className="rounded-2xl bg-emerald-500 px-5 py-3 font-semibold text-black disabled:opacity-50"
                 onClick={login}
@@ -261,7 +243,6 @@ export default function AdminPage() {
         <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-lg font-semibold">Times</h2>
-
             <div className="flex gap-3">
               <button
                 className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-semibold text-white/90 disabled:opacity-50"
@@ -270,19 +251,16 @@ export default function AdminPage() {
               >
                 Refresh
               </button>
-
               <button
                 className="rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-black disabled:opacity-50"
                 onClick={save}
                 disabled={!loggedIn || saving || loading}
-                title={!loggedIn ? "Login first" : ""}
               >
                 {saving ? "Saving..." : "Save Changes"}
               </button>
             </div>
           </div>
 
-          {/* Inputs */}
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             <TimeInput label="Fajr" value={data.fajr} onChange={(v) => setData({ ...data, fajr: v })} disabled={!loggedIn || loading} />
             <TimeInput label="Dhuhr" value={data.dhuhr} onChange={(v) => setData({ ...data, dhuhr: v })} disabled={!loggedIn || loading} />
@@ -291,14 +269,11 @@ export default function AdminPage() {
             <TimeInput label="Isha" value={data.isha} onChange={(v) => setData({ ...data, isha: v })} disabled={!loggedIn || loading} />
           </div>
 
-          {/* Jumuah */}
           <div className="mt-6 rounded-3xl border border-white/10 bg-black/20 p-5">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-semibold">Jumu&apos;ah</div>
-                <div className="mt-1 text-xs text-white/60">Add one or multiple slots</div>
               </div>
-
               <button
                 className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white/90 disabled:opacity-50"
                 onClick={addJummahSlot}
@@ -307,23 +282,19 @@ export default function AdminPage() {
                 + Add Slot
               </button>
             </div>
-
             <div className="mt-4 grid gap-3">
               {data.jummah.map((j, idx) => (
                 <div key={idx} className="rounded-2xl border border-white/10 bg-black/30 p-4">
                   <div className="flex items-center justify-between">
                     <div className="text-sm font-semibold text-white/85">Slot {idx + 1}</div>
-
                     <button
                       className="text-xs text-white/60 hover:text-white disabled:opacity-50"
                       onClick={() => removeJummahSlot(idx)}
                       disabled={!loggedIn || data.jummah.length === 1 || loading}
-                      title={data.jummah.length === 1 ? "Need at least 1 slot" : "Remove slot"}
                     >
                       Remove
                     </button>
                   </div>
-
                   <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <TimeInput
                       label="Khutbah"
@@ -353,17 +324,11 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Status bar */}
           {status ? (
             <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80">
               {status}
             </div>
           ) : null}
-
-          <div className="mt-4 text-xs text-white/50">
-            Time format: <span className="font-mono">HH:MM</span> (e.g. 06:35, 13:20). Preview shows{" "}
-            <span className="font-mono">02:00 PM</span>.
-          </div>
         </section>
       </div>
     </main>
@@ -384,7 +349,6 @@ function TimeInput(props: {
     <div>
       <div className="flex items-center justify-between gap-3">
         <label className="text-sm text-white/70">{props.label}</label>
-
         <div className="flex items-center gap-2">
           {!isOk ? <span className="text-xs text-amber-300">HH:MM</span> : null}
           {isOk && normalized ? (
@@ -392,7 +356,6 @@ function TimeInput(props: {
           ) : null}
         </div>
       </div>
-
       <input
         className={`mt-2 w-full rounded-2xl border px-4 py-3 outline-none transition disabled:opacity-50
           ${
