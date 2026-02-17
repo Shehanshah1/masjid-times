@@ -213,7 +213,7 @@ export default function DisplayPage() {
 
   const tiles = [
     { key: "fajr", title: "Fajr", jamaat: jamaat.fajr },
-    { key: "sunrise", title: "Sunrise" },
+    { key: "sunrise", title: "Sunrise" }, // Sunrise: no adhan label + no jamaat
     { key: "dhuhr", title: "Dhuhr", jamaat: jamaat.dhuhr },
     { key: "asr", title: "Asr", jamaat: jamaat.asr },
     { key: "maghrib", title: "Maghrib", jamaat: jamaat.maghrib },
@@ -251,12 +251,14 @@ export default function DisplayPage() {
           {tiles.map((t) => {
             const adhan = formatTime(adhanToday[t.key]);
             const isNext = next.key === t.key && next.at.getTime() === adhanToday[t.key].getTime();
+            const isSunrise = t.key === "sunrise";
 
             return (
               <Tile
                 key={t.key}
                 title={t.title}
                 adhan={adhan}
+                hideAdhanLabel={isSunrise} // ✅ no "Adhan" label for Sunrise
                 jamaat={"jamaat" in t ? fmt12From24(t.jamaat) : undefined}
                 highlight={isNext}
               />
@@ -273,11 +275,8 @@ export default function DisplayPage() {
                 {jamaat.jummah?.length
                   ? jamaat.jummah
                       .slice(0, 3)
-                      .map(
-                        (j) =>
-                          `${fmt12From24(j.khutbah)} (Khutbah) • ${fmt12From24(j.salah)} (Salah)`
-                      )
-                      .join("   |   ")
+                      .map((j) => fmt12From24(j.khutbah))
+                      .join("   •   ")
                   : "—"}
               </span>
             </div>
@@ -304,11 +303,13 @@ function Tile({
   adhan,
   jamaat,
   highlight,
+  hideAdhanLabel,
 }: {
   title: string;
   adhan: string;
   jamaat?: string;
   highlight?: boolean;
+  hideAdhanLabel?: boolean;
 }) {
   return (
     <div
@@ -325,7 +326,9 @@ function Tile({
 
       <div className="mt-4 grid grid-cols-2 gap-5 items-end min-h-0">
         <div className="min-w-0">
-          <div className="opacity-70 text-[clamp(12px,1vw,18px)]">Adhan</div>
+          <div className="opacity-70 text-[clamp(12px,1vw,18px)]">
+            {hideAdhanLabel ? "\u00A0" : "Adhan"}
+          </div>
           <div className="mt-2 font-semibold tracking-tight tabular-nums text-[clamp(28px,3vw,64px)] leading-none">
             {adhan}
           </div>
