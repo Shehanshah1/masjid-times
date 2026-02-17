@@ -67,18 +67,6 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false);
   const [loggingIn, setLoggingIn] = useState(false);
 
-  const invalidTimes = useMemo(() => {
-    const bad: string[] = [];
-    ["fajr", "dhuhr", "asr", "maghrib", "isha"].forEach((key) => {
-      if (!isLikelyTime((data as any)[key])) bad.push(key.charAt(0).toUpperCase() + key.slice(1));
-    });
-    data.jummah.forEach((j, i) => {
-      if (!isLikelyTime(j.khutbah)) bad.push(`Jumu'ah ${i + 1} Khutbah`);
-      if (!isLikelyTime(j.salah)) bad.push(`Jumu'ah ${i + 1} Salah`);
-    });
-    return bad;
-  }, [data]);
-
   async function load() {
     setLoading(true);
     try {
@@ -114,10 +102,6 @@ export default function AdminPage() {
   }
 
   async function save() {
-    if (invalidTimes.length > 0) {
-      setStatus(`Fix format: ${invalidTimes.join(", ")}`);
-      return;
-    }
     setSaving(true);
     const payload = {
       ...data,
@@ -136,7 +120,7 @@ export default function AdminPage() {
       const res = await fetch("/api/jamaat/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: payload }), // Fixed: Wrap in data key
+        body: JSON.stringify({ data: payload }), 
       });
       if (res.ok) setStatus("Saved ✅");
       else setStatus("Save failed ❌");
@@ -154,7 +138,7 @@ export default function AdminPage() {
           <h1 className="text-2xl font-bold">Admin Login</h1>
           <input 
             type="password" 
-            className="w-full p-3 bg-white/5 border border-white/10 rounded-xl"
+            className="w-full p-3 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-emerald-500/50"
             value={passcode}
             onChange={(e) => setPasscode(e.target.value)}
             placeholder="Passcode"
@@ -162,7 +146,7 @@ export default function AdminPage() {
           <button 
             onClick={login} 
             disabled={loggingIn}
-            className="w-full bg-emerald-500 p-3 rounded-xl text-black font-bold"
+            className="w-full bg-emerald-500 p-3 rounded-xl text-black font-bold disabled:opacity-50"
           >
             {loggingIn ? "Logging in..." : "Login"}
           </button>
@@ -187,7 +171,7 @@ export default function AdminPage() {
             <div key={key}>
               <label className="block text-sm opacity-70 mb-1 capitalize">{key}</label>
               <input 
-                className="w-full p-3 bg-white/5 border border-white/10 rounded-xl"
+                className="w-full p-3 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-emerald-500/50"
                 value={(data as any)[key]}
                 onChange={(e) => setData({ ...data, [key]: e.target.value })}
               />
@@ -207,7 +191,7 @@ export default function AdminPage() {
             <div key={i} className="grid grid-cols-2 gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
                <input 
                 placeholder="Khutbah"
-                className="p-2 bg-black/20 rounded-lg"
+                className="p-2 bg-black/20 rounded-lg outline-none"
                 value={j.khutbah}
                 onChange={(e) => {
                   const next = [...data.jummah];
@@ -217,7 +201,7 @@ export default function AdminPage() {
               />
               <input 
                 placeholder="Salah"
-                className="p-2 bg-black/20 rounded-lg"
+                className="p-2 bg-black/20 rounded-lg outline-none"
                 value={j.salah}
                 onChange={(e) => {
                   const next = [...data.jummah];

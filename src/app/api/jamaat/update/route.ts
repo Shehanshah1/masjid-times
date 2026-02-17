@@ -32,13 +32,19 @@ export async function POST(req: Request) {
       return Response.json({ ok: false, error: "Invalid payload" }, { status: 400 });
     }
 
-    // Merge with existing data to preserve fields like jummah2 not in admin form
+    // Merging logic to preserve fields like jummah2 not present in the admin panel form
     const existing = await getJamaatTimes();
-    const merged = { ...existing, ...candidate };
+    const mergedData = { 
+      ...existing, 
+      ...candidate,
+      // Ensure jummah array from admin panel takes priority
+      jummah: candidate.jummah || existing.jummah 
+    };
 
-    await saveJamaatTimes(merged);
+    await saveJamaatTimes(mergedData);
     return Response.json({ ok: true });
   } catch (error) {
-    return Response.json({ ok: false, error: "Failed to save" }, { status: 500 });
+    console.error("Failed to update jamaat times:", error);
+    return Response.json({ ok: false, error: "Failed to save times" }, { status: 500 });
   }
 }
