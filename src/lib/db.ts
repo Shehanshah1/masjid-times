@@ -86,7 +86,12 @@ export async function saveJamaatTimes(data: Jamaat): Promise<void> {
 
   // 1. Save to Vercel KV
   if (hasKV) {
-    await kv.set("jamaat_times", data);
+    try {
+      await kv.set("jamaat_times", data);
+    } catch (error) {
+      // Do not block local persistence if KV is misconfigured/unavailable.
+      console.error("KV Write Error:", error);
+    }
   }
 
   // 2. Always sync to Filesystem (useful for local dev or backup)
