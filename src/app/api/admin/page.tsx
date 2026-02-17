@@ -16,9 +16,10 @@ type Jamaat = {
 
 /* ================= Defaults ================= */
 
+// ✅ Your desired 2 Jumu'ah slots (store as HH:MM 24-hour)
 const DEFAULT_JUMMAH = [
-  { khutbah: "12:45", salah: "13:15" },
-  { khutbah: "13:45", salah: "14:15" },
+  { khutbah: "12:15", salah: "12:30" },
+  { khutbah: "13:15", salah: "13:45" },
 ];
 
 const FALLBACK: Jamaat = {
@@ -98,7 +99,7 @@ function TimeField({
         </select>
 
         {/* ✅ Cohesive preview: 02:00 PM style */}
-        <div className="flex items-center text-sm opacity-50">
+        <div className="flex items-center text-sm opacity-50 tabular-nums">
           {fmt12From24(value)}
         </div>
       </div>
@@ -141,13 +142,16 @@ export default function AdminPage() {
   }
 
   async function load() {
-    const res = await fetch("/api/jamaat");
+    const res = await fetch("/api/jamaat", { cache: "no-store" });
     const json = await res.json();
     if (json?.data) {
       const data = json.data;
-      if (!data.jummah || data.jummah.length < 2) {
+
+      // ✅ Ensure we always have TWO jummah slots by default
+      if (!data.jummah || !Array.isArray(data.jummah) || data.jummah.length < 2) {
         data.jummah = DEFAULT_JUMMAH;
       }
+
       setJamaat(data);
     }
   }
@@ -201,60 +205,35 @@ export default function AdminPage() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          <TimeField
-            label="Fajr"
-            value={jamaat.fajr}
-            onChange={(v) => setJamaat({ ...jamaat, fajr: v })}
-          />
-          <TimeField
-            label="Dhuhr"
-            value={jamaat.dhuhr}
-            onChange={(v) => setJamaat({ ...jamaat, dhuhr: v })}
-          />
-          <TimeField
-            label="Asr"
-            value={jamaat.asr}
-            onChange={(v) => setJamaat({ ...jamaat, asr: v })}
-          />
-          <TimeField
-            label="Maghrib"
-            value={jamaat.maghrib}
-            onChange={(v) => setJamaat({ ...jamaat, maghrib: v })}
-          />
-          <TimeField
-            label="Isha"
-            value={jamaat.isha}
-            onChange={(v) => setJamaat({ ...jamaat, isha: v })}
-          />
+          <TimeField label="Fajr" value={jamaat.fajr} onChange={(v) => setJamaat({ ...jamaat, fajr: v })} />
+          <TimeField label="Dhuhr" value={jamaat.dhuhr} onChange={(v) => setJamaat({ ...jamaat, dhuhr: v })} />
+          <TimeField label="Asr" value={jamaat.asr} onChange={(v) => setJamaat({ ...jamaat, asr: v })} />
+          <TimeField label="Maghrib" value={jamaat.maghrib} onChange={(v) => setJamaat({ ...jamaat, maghrib: v })} />
+          <TimeField label="Isha" value={jamaat.isha} onChange={(v) => setJamaat({ ...jamaat, isha: v })} />
         </div>
 
         {/* Jumu'ah */}
         <div className="bg-black/40 p-6 rounded-2xl space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Jumu'ah</h2>
+            <h2 className="text-xl font-semibold">Jumu&apos;ah</h2>
+
+            {/* ✅ Prevent unlimited slots; reset to the 2 you want */}
             <button
-              onClick={() =>
-                setJamaat({
-                  ...jamaat,
-                  jummah: [
-                    ...jamaat.jummah,
-                    { khutbah: "12:45", salah: "13:15" },
-                  ],
-                })
-              }
+              onClick={() => setJamaat({ ...jamaat, jummah: DEFAULT_JUMMAH })}
               className="bg-white/10 px-4 py-2 rounded-xl"
+              title="Reset to the default 2 Jumu'ah slots"
             >
-              + Add Slot
+              Reset to 2 Slots
             </button>
           </div>
 
-          {jamaat.jummah.map((slot, i) => (
+          {jamaat.jummah.slice(0, 2).map((slot, i) => (
             <div
               key={i}
               className="grid md:grid-cols-2 gap-6 bg-black/30 p-4 rounded-xl"
             >
               <TimeField
-                label={`Slot ${i + 1} Khutbah`}
+                label={`Jumu'ah ${i + 1} Khutbah`}
                 value={slot.khutbah}
                 onChange={(v) =>
                   setJamaat({
@@ -266,7 +245,7 @@ export default function AdminPage() {
                 }
               />
               <TimeField
-                label={`Slot ${i + 1} Salah`}
+                label={`Jumu'ah ${i + 1} Salah`}
                 value={slot.salah}
                 onChange={(v) =>
                   setJamaat({
@@ -279,6 +258,10 @@ export default function AdminPage() {
               />
             </div>
           ))}
+
+          <div className="text-xs opacity-60">
+            Tip: Only the first 2 Jumu&apos;ah slots are used.
+          </div>
         </div>
 
         <button
