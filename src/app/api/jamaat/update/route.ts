@@ -1,4 +1,20 @@
-// src/app/api/jamaat/update/route.ts
+import { cookies } from "next/headers";
+import { getJamaatTimes, saveJamaatTimes, type Jamaat } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
+
+function isValidJamaat(x: unknown): x is Jamaat {
+  if (!x || typeof x !== "object") return false;
+  const v = x as any;
+  return (
+    typeof v.fajr === "string" &&
+    typeof v.dhuhr === "string" &&
+    typeof v.asr === "string" &&
+    typeof v.maghrib === "string" &&
+    typeof v.isha === "string" &&
+    Array.isArray(v.jummah)
+  );
+}
 
 export async function POST(req: Request) {
   const cookieStore = await cookies();
@@ -8,29 +24,21 @@ export async function POST(req: Request) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await req.json();
-  const candidate = body.data ?? body;
-
-  // 1. Get existing data first
-  const existingData = await getJamaatTimes();
-
-  // 2. Validate the incoming update
-  if (!isValidJamaat(candidate)) {
-    return Response.json({ ok: false, error: "Invalid payload format" }, { status: 400 });
-  }
-
   try {
-    // 3. MERGE candidate with existing to preserve jummah2
-    const finalData = {
-      ...existingData,
-      ...candidate,
-      // If candidate has jummah, use it; otherwise keep existing
-      jummah: candidate.jummah || existingData.jummah 
-    };
+    const body = await req.json();
+    const candidate = body.data ?? body;
 
-    await saveJamaatTimes(finalData);
+    if (!isValidJamaat(candidate)) {
+      return Response.json({ ok: false, error: "Invalid payload" }, { status: 400 });
+    }
+
+    // Merge with existing data to preserve fields like jummah2 not in admin form
+    const existing = await getJamaatTimes();
+    const merged = { ...existing, ...candidate };
+
+    await saveJamaatTimes(merged);
     return Response.json({ ok: true });
   } catch (error) {
-    return Response.json({ ok: false, error: "Database error" }, { status: 500 });
+    return Response.json({ ok: false, error: "Failed to save" }, { status: 500 });
   }
 }
