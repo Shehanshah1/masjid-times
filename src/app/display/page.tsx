@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Coordinates, CalculationMethod, Madhab, PrayerTimes } from "adhan";
 import { masjid } from "@/config/masjid";
+import { fmt12From24, fmtDateTime12 } from "@/lib/time";
 
 /* ================= Types ================= */
 
@@ -77,22 +78,27 @@ function addDays(d: Date, days: number) {
 /* ================= Utilities ================= */
 
 function formatTime(date: Date) {
-  return new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-    timeZone: masjid.timezone,
-  }).format(date);
+  // ✅ Force 02:00 PM style
+  return fmtDateTime12(date, masjid.timezone);
 }
 
 function formatClock(date: Date) {
-  return new Intl.DateTimeFormat("en-US", {
+  // ✅ 06:03:31 PM (still cohesive)
+  const parts = new Intl.DateTimeFormat("en-US", {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
     hour12: true,
     timeZone: masjid.timezone,
-  }).format(date);
+  }).formatToParts(date);
+
+  const hh = (parts.find((p) => p.type === "hour")?.value ?? "12").padStart(2, "0");
+  const mm = (parts.find((p) => p.type === "minute")?.value ?? "00").padStart(2, "0");
+  const ss = (parts.find((p) => p.type === "second")?.value ?? "00").padStart(2, "0");
+  const dpRaw = parts.find((p) => p.type === "dayPeriod")?.value ?? "PM";
+  const dp = dpRaw.toUpperCase().includes("A") ? "AM" : "PM";
+
+  return `${hh}:${mm}:${ss} ${dp}`;
 }
 
 function calculateAdhanTimes(date: Date) {
@@ -251,7 +257,7 @@ export default function DisplayPage() {
                 key={t.key}
                 title={t.title}
                 adhan={adhan}
-                jamaat={"jamaat" in t ? t.jamaat : undefined}
+                jamaat={"jamaat" in t ? fmt12From24(t.jamaat) : undefined}
                 highlight={isNext}
               />
             );
@@ -267,7 +273,10 @@ export default function DisplayPage() {
                 {jamaat.jummah?.length
                   ? jamaat.jummah
                       .slice(0, 3)
-                      .map((j, idx) => `${j.khutbah} (Khutbah) • ${j.salah} (Salah)`)
+                      .map(
+                        (j) =>
+                          `${fmt12From24(j.khutbah)} (Khutbah) • ${fmt12From24(j.salah)} (Salah)`
+                      )
                       .join("   |   ")
                   : "—"}
               </span>
