@@ -30,11 +30,7 @@ const FALLBACK: Jamaat = {
 };
 
 /* ================= Timezone helpers ================= */
-/**
- * We want "today" and "now" in the masjid timezone, even if the TV/device is set to a different timezone.
- * We do that by reading the masjid-timezone wall-clock parts and constructing a Date from those parts.
- * (This Date represents the same wall-clock time; it’s good for same-day ordering + display logic.)
- */
+
 function zonedParts(date: Date, timeZone: string) {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone,
@@ -78,12 +74,10 @@ function addDays(d: Date, days: number) {
 /* ================= Utilities ================= */
 
 function formatTime(date: Date) {
-  // ✅ Force 02:00 PM style
   return fmtDateTime12(date, masjid.timezone);
 }
 
 function formatClock(date: Date) {
-  // ✅ 06:03:31 PM (still cohesive)
   const parts = new Intl.DateTimeFormat("en-US", {
     hour: "2-digit",
     minute: "2-digit",
@@ -105,7 +99,6 @@ function calculateAdhanTimes(date: Date) {
   const coords = new Coordinates(masjid.coordinates.lat, masjid.coordinates.lon);
   const params = CalculationMethod.NorthAmerica();
 
-  // Your config-driven angles (e.g., 18°/18°) + Hanafi
   params.fajrAngle = masjid.calc.fajrAngle;
   params.ishaAngle = masjid.calc.ishaAngle;
   params.madhab = Madhab.Hanafi;
@@ -133,7 +126,6 @@ function getNextPrayerInfo(
     if (todayTimes[key] > now) return { key, at: todayTimes[key] };
   }
 
-  // After Isha -> next is tomorrow Fajr
   return { key: "fajr", at: tomorrowTimes.fajr };
 }
 
@@ -163,9 +155,16 @@ function isValidJamaat(x: any): x is Jamaat {
 
 export default function DisplayPage() {
   const [jamaat, setJamaat] = useState<Jamaat>(FALLBACK);
-  const [now, setNow] = useState(() => new Date());
+  const [now, setNow] = useState<Date | null>(null);
 
-  // Fetch jamaat (poll)
+  // Initial time sync and live clock
+  useEffect(() => {
+    setNow(new Date());
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Poll for jamaat updates
   useEffect(() => {
     let active = true;
 
@@ -176,8 +175,8 @@ export default function DisplayPage() {
         const json = await res.json();
         const data = json?.data;
         if (active && isValidJamaat(data)) setJamaat(data);
-      } catch {
-        // keep fallback
+      } catch (e) {
+        console.error("Failed to load jamaat times", e);
       }
     }
 
@@ -189,18 +188,11 @@ export default function DisplayPage() {
     };
   }, []);
 
-  // Live clock
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  // Masjid-tz aligned "now" and "today"
-  const nowTz = useMemo(() => nowInMasjidTZ(now), [now]);
-  const todayTz = useMemo(() => todayInMasjidTZ(now), [now]);
+  // Calculations based on current time
+  const nowTz = useMemo(() => now ? nowInMasjidTZ(now) : nowInMasjidTZ(new Date()), [now]);
+  const todayTz = useMemo(() => now ? todayInMasjidTZ(now) : todayInMasjidTZ(new Date()), [now]);
   const tomorrowTz = useMemo(() => addDays(todayTz, 1), [todayTz]);
 
-  // Adhan times for today & tomorrow (for rollover)
   const adhanToday = useMemo(() => calculateAdhanTimes(todayTz), [todayTz]);
   const adhanTomorrow = useMemo(() => calculateAdhanTimes(tomorrowTz), [tomorrowTz]);
 
@@ -213,12 +205,15 @@ export default function DisplayPage() {
 
   const tiles = [
     { key: "fajr", title: "Fajr", jamaat: jamaat.fajr },
-    { key: "sunrise", title: "Sunrise" }, // Sunrise: no adhan label + no jamaat
+    { key: "sunrise", title: "Sunrise" },
     { key: "dhuhr", title: "Dhuhr", jamaat: jamaat.dhuhr },
     { key: "asr", title: "Asr", jamaat: jamaat.asr },
     { key: "maghrib", title: "Maghrib", jamaat: jamaat.maghrib },
     { key: "isha", title: "Isha", jamaat: jamaat.isha },
   ] as const;
+
+  // Prevent hydration mismatch by showing a black screen until the clock is ready
+  if (!now) return <div className="h-screen w-screen bg-black" />;
 
   const clock = formatClock(now);
 
@@ -258,7 +253,7 @@ export default function DisplayPage() {
                 key={t.key}
                 title={t.title}
                 adhan={adhan}
-                hideAdhanLabel={isSunrise} // ✅ no "Adhan" label for Sunrise
+                hideAdhanLabel={isSunrise}
                 jamaat={"jamaat" in t ? fmt12From24(t.jamaat) : undefined}
                 highlight={isNext}
               />
