@@ -28,6 +28,7 @@ const FS_DATA_PATH = path.join(process.cwd(), "data", "jamaat.json");
 
 // Helper to check if Vercel KV is configured
 const hasKV = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
+const isVercelRuntime = process.env.VERCEL === "1";
 
 function isValidJamaat(x: unknown): x is Jamaat {
   if (!x || typeof x !== "object") return false;
@@ -45,26 +46,38 @@ function isValidJamaat(x: unknown): x is Jamaat {
 }
 
 export async function getJamaatTimes(): Promise<Jamaat> {
-  // 1. Try Vercel KV
-  if (hasKV) {
+  async function readFromKV() {
+    if (!hasKV) return null;
+
     try {
       const data = await kv.get<Jamaat>("jamaat_times");
       if (data && isValidJamaat(data)) return data;
     } catch (error) {
       console.error("KV Read Error:", error);
     }
+
+    return null;
   }
 
-  // 2. Fallback to Filesystem (Local Dev)
-  try {
-    const raw = await fs.readFile(FS_DATA_PATH, "utf8");
-    const json = JSON.parse(raw);
-    if (isValidJamaat(json)) return json;
-  } catch {
-    // File doesn't exist or error reading, ignore
+  async function readFromFS() {
+    try {
+      const raw = await fs.readFile(FS_DATA_PATH, "utf8");
+      const json = JSON.parse(raw);
+      if (isValidJamaat(json)) return json;
+    } catch {
+      // File doesn't exist or error reading, ignore
+    }
+
+    return null;
   }
 
-  // 3. Return Defaults
+  // In local dev, filesystem is the source of truth. On Vercel, prefer KV.
+  const preferred = isVercelRuntime ? await readFromKV() : await readFromFS();
+  if (preferred) return preferred;
+
+  const fallback = isVercelRuntime ? await readFromFS() : await readFromKV();
+  if (fallback) return fallback;
+
   return DEFAULTS;
 }
 
