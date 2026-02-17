@@ -5,11 +5,13 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     const passcode = String(body?.passcode ?? "").trim();
+    // Default to a safe placeholder if env is missing to prevent crash
     const expected = String(process.env.ADMIN_PASSCODE ?? "").trim();
 
     if (!expected) {
+      console.error("ADMIN_PASSCODE is not set in .env file");
       return Response.json(
-        { ok: false, error: "ADMIN_PASSCODE not configured" },
+        { ok: false, error: "Server configuration error: ADMIN_PASSCODE missing" },
         { status: 500 }
       );
     }
@@ -18,7 +20,7 @@ export async function POST(req: Request) {
       return Response.json({ ok: false }, { status: 401 });
     }
 
-    const cookieStore = await cookies(); // ✅ your Next.js requires await
+    const cookieStore = await cookies();
 
     cookieStore.set("admin_session", "ok", {
       httpOnly: true,
@@ -29,7 +31,7 @@ export async function POST(req: Request) {
     });
 
     return Response.json({ ok: true });
-  } catch {
+  } catch (error) {
     return Response.json(
       { ok: false, error: "Invalid request" },
       { status: 400 }
