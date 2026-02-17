@@ -27,8 +27,8 @@ const FALLBACK: Jamaat = {
   asr: "16:15",
   maghrib: "17:55",
   isha: "19:30",
-  jummah: [{ khutbah: "12:15", salah: "12:45" }],
-  jummah2: [{ khutbah: "13:15", salah: "13:45" }],    
+  jummah: [{ khutbah: "12:15", salah: "12:15" }],
+  jummah2: [{ khutbah: "13:15", salah: "13:15" }],    
 };
 
 /* ================= Timezone helpers ================= */
@@ -295,17 +295,15 @@ export default function DisplayPage() {
           ].join(" ")}
         >
           <div className="min-w-0">
-            <div className="text-[clamp(16px,1.6vw,30px)]">
-              Jumu&apos;ah:{" "}
-              <span className="font-semibold">
-                {jamaat.jummah?.length
-                  ? jamaat.jummah
-                      .slice(0, 3)
-                      .map((j) => fmt12From24(j.khutbah))
-                      .join("   •   ")
-                  : "—"}
-              </span>
-            </div>
+           {/* src/app/display/page.tsx - Footer snippet */}
+<div className="text-[clamp(16px,1.6vw,30px)]">
+  Jumu&apos;ah:{" "}
+  <span className="font-semibold">
+    {[...(jamaat.jummah || []), ...(jamaat.jummah2 || [])]
+      .map((j) => fmt12From24(j.khutbah))
+      .join("   •   ")}
+  </span>
+</div>
           </div>
 
           <div className="text-right shrink-0">
