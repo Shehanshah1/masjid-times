@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Masjid Times
+
+A modern, responsive Next.js application designed to display prayer times (Adhan and Jamaat) for Masajid. This project is ideal for use on large TV screens or monitors within a masjid, as well as a public-facing website for community members.
+
+## Features
+
+* **Live Prayer Times**: Automatically calculates Adhan times based on your masjid's coordinates using the `adhan` library.
+* **Manual Jamaat Updates**: A secure admin panel allows masjid staff to update Jamaat (congregation) times manually as they change throughout the year.
+* **Next Prayer Countdown**: Displays a live clock and a real-time countdown to the next upcoming prayer.
+* **Jumu'ah Support**: Support for multiple Jumu'ah khutbah and salah slots.
+* **Adaptive Display**: The interface is designed to work in both portrait and landscape modes, making it versatile for different screen types.
+* **Dual Storage**: Automatically uses the local filesystem for development and supports Vercel KV for cloud persistence in production.
+
+## Tech Stack
+
+* **Framework**: Next.js 16 (App Router)
+* **Styling**: Tailwind CSS 4
+* **Prayer Calculations**: Adhan.js
+* **Database**: Vercel KV / Local JSON
+* **Language**: TypeScript
 
 ## Getting Started
 
-First, run the development server:
+### 1. Configuration
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+To adapt this for your masjid, edit the configuration file at `src/config/masjid.ts`. You must provide your masjid's name, timezone, coordinates, and preferred calculation method:
+
+```typescript
+// src/config/masjid.ts
+export const masjid = {
+  name: "Your Masjid Name",
+  timezone: "America/Chicago", // Your local timezone
+  coordinates: { lat: 31.3271, lon: -89.2903 }, // Your latitude and longitude
+  calc: {
+    method: "NORTH_AMERICA", // Calculation method
+    fajrAngle: 18,  
+    ishaAngle: 18,
+    madhab: "HANAFI", // HANAFI or SHAFI
+  },
+};
+
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Environment Variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a `.env.local` file in the root directory and add a passcode for the admin panel. If you are deploying to Vercel, you will also need the KV credentials.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+ADMIN_PASSCODE=your_secure_passcode_here
+KV_REST_API_URL=...
+KV_REST_API_TOKEN=...
 
-## Learn More
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 3. Installation & Development
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Run the following commands to get started locally:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm install
+npm run dev
 
-## Deploy on Vercel
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Open [http://localhost:3000/display](https://www.google.com/search?q=http://localhost:3000/display) to see the live board or [http://localhost:3000/admin](https://www.google.com/search?q=http://localhost:3000/admin) to log in and update times.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Admin Panel
+
+The admin panel is accessible at `/admin`. It requires the `ADMIN_PASSCODE` you set in your environment variables to log in. Once logged in, you can:
+
+* Update Jamaat times for the five daily prayers.
+* Add or remove multiple Jumu'ah prayer slots.
+* Changes are synchronized across both local storage and the cloud (if configured).
+
+## Deployment
+
+This project is optimized for the [Vercel Platform](https://vercel.com/new). When deploying:
+
+1. Connect your GitHub repository to Vercel.
+2. Add your `ADMIN_PASSCODE` to the Environment Variables in the Vercel dashboard.
+3. For persistent storage, add the **Vercel KV** integration to your project.
+
+## Project Structure
+
+* `src/app/display/page.tsx`: The public prayer board interface.
+* `src/app/admin/page.tsx`: The password-protected management interface.
+* `src/lib/db.ts`: Logic for reading and writing jamaat times to storage.
+* `src/lib/time.ts`: Utilities for time formatting and timezone handling.
+* `data/jamaat.json`: Local storage file for prayer times (created automatically).
