@@ -105,9 +105,9 @@ export default async function Home() {
                 )}
               </div>
 
-              <div className="mt-6 rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-white/70">
+              <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/60">
                 Tip: Jamaat times are editable from the Admin panel. Display page pulls from{" "}
-                <span className="font-mono text-white/80">/api/jamaat</span>.
+                <span className="font-mono text-white/70">/api/jamaat</span>.
               </div>
             </section>
 
@@ -154,15 +154,15 @@ export default async function Home() {
 
 function TimeCard(props: { label: string; adhan: string; jamaat?: string }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+    <div className="rounded-xl border border-white/12 bg-white/[0.06] backdrop-blur-sm p-4">
       <div className="flex items-center justify-between">
-        <div className="text-sm font-semibold text-white/90">{props.label}</div>
+        <div className="text-base font-semibold text-white/90">{props.label}</div>
         {props.jamaat ? (
-          <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[11px] text-emerald-200">
+          <span className="rounded-full border border-emerald-400/25 bg-emerald-400/12 px-2.5 py-0.5 text-xs text-emerald-200">
             Jamaat
           </span>
         ) : (
-          <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-white/60">
+          <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-xs text-white/50">
             &mdash;
           </span>
         )}
@@ -170,14 +170,14 @@ function TimeCard(props: { label: string; adhan: string; jamaat?: string }) {
 
       <div className="mt-3 grid grid-cols-2 gap-3">
         <div>
-          <div className="text-[11px] text-white/60">Adhan</div>
+          <div className="text-xs text-white/50">Adhan</div>
           <div className="mt-1 text-xl font-semibold tabular-nums">
             {props.adhan}
           </div>
         </div>
 
         <div className="text-right">
-          <div className="text-[11px] text-white/60">Jamaat</div>
+          <div className="text-xs text-white/50">Jamaat</div>
           <div className="mt-1 text-xl font-semibold tabular-nums text-emerald-300">
             {props.jamaat ? fmt12From24(props.jamaat) : "—"}
           </div>
@@ -223,8 +223,8 @@ function JummahCard(props: { adhan: string; jummah1Time: string; jummah2Time: st
 
 function InfoRow(props: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 p-4">
-      <div className="text-sm text-white/70">{props.label}</div>
+    <div className="flex items-center justify-between rounded-xl border border-white/12 bg-white/[0.06] backdrop-blur-sm p-4">
+      <div className="text-base text-white/70">{props.label}</div>
       <div className="text-lg font-semibold tabular-nums text-amber-200">{props.value}</div>
     </div>
   );
@@ -234,7 +234,7 @@ function LinkButton(props: { href: string; label: string }) {
   return (
     <a
       href={props.href}
-      className="block rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-semibold text-white/90 hover:bg-white/10 transition-colors"
+      className="block rounded-xl border border-white/12 bg-white/[0.06] backdrop-blur-sm px-4 py-3 text-sm font-semibold text-white/90 hover:bg-white/12 transition-colors"
     >
       {props.label}
     </a>
