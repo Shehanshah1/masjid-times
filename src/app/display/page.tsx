@@ -28,7 +28,7 @@ const FALLBACK: Jamaat = {
   maghrib: "17:55",
   isha: "19:30",
   jummah: [{ khutbah: "12:15", salah: "12:15" }],
-  jummah2: [{ khutbah: "13:15", salah: "13:15" }],    
+  jummah2: [{ khutbah: "13:15", salah: "13:15" }],
 };
 
 /* ================= Timezone helpers ================= */
@@ -73,6 +73,12 @@ function addDays(d: Date, days: number) {
   return x;
 }
 
+function isFriday(now: Date): boolean {
+  const p = zonedParts(now, masjid.timezone);
+  const localDate = new Date(p.year, p.month - 1, p.day);
+  return localDate.getDay() === 5;
+}
+
 /* ================= Utilities ================= */
 
 function formatTime(date: Date) {
@@ -95,6 +101,16 @@ function formatClock(date: Date) {
   const dp = dpRaw.toUpperCase().includes("A") ? "AM" : "PM";
 
   return `${hh}:${mm}:${ss} ${dp}`;
+}
+
+function formatDate(date: Date) {
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: masjid.timezone,
+  }).format(date);
 }
 
 function calculateAdhanTimes(date: Date) {
@@ -218,46 +234,67 @@ export default function DisplayPage() {
 
   const countdown = useMemo(() => msToHMS(next.at.getTime() - nowTz.getTime()), [next, nowTz]);
 
-  const tiles = [
-    { key: "fajr", title: "Fajr", jamaat: jamaat.fajr },
-    { key: "sunrise", title: "Sunrise" },
-    { key: "dhuhr", title: "Dhuhr", jamaat: jamaat.dhuhr },
-    { key: "asr", title: "Asr", jamaat: jamaat.asr },
-    { key: "maghrib", title: "Maghrib", jamaat: jamaat.maghrib },
-    { key: "isha", title: "Isha", jamaat: jamaat.isha },
-  ] as const;
+  const friday = isFriday(now);
+  const todayDate = formatDate(now);
+
+  const tiles = friday
+    ? [
+        { key: "fajr" as PrayerKey, title: "Fajr", jamaat: jamaat.fajr },
+        { key: "sunrise" as PrayerKey, title: "Sunrise" },
+        { key: "dhuhr" as PrayerKey, title: "Jummah", isJummah: true },
+        { key: "asr" as PrayerKey, title: "Asr", jamaat: jamaat.asr },
+        { key: "maghrib" as PrayerKey, title: "Maghrib", jamaat: jamaat.maghrib },
+        { key: "isha" as PrayerKey, title: "Isha", jamaat: jamaat.isha },
+      ]
+    : [
+        { key: "fajr" as PrayerKey, title: "Fajr", jamaat: jamaat.fajr },
+        { key: "sunrise" as PrayerKey, title: "Sunrise" },
+        { key: "dhuhr" as PrayerKey, title: "Dhuhr", jamaat: jamaat.dhuhr },
+        { key: "asr" as PrayerKey, title: "Asr", jamaat: jamaat.asr },
+        { key: "maghrib" as PrayerKey, title: "Maghrib", jamaat: jamaat.maghrib },
+        { key: "isha" as PrayerKey, title: "Isha", jamaat: jamaat.isha },
+      ];
 
   const clock = formatClock(now);
 
+  const nextLabel = friday && next.key === "dhuhr" ? "JUMMAH" : next.key.toUpperCase();
+
   return (
-    <main className="h-screen w-screen bg-black text-white overflow-hidden">
+    <main className="h-screen w-screen overflow-hidden islamic-bg text-white">
+      {/* Decorative Islamic pattern overlay */}
+      <div className="islamic-pattern-overlay" />
+
       <div
         className={[
-          "h-full w-full p-4 md:p-6 grid gap-4 md:gap-5 grid-rows-[auto_1fr_auto]",
+          "h-full w-full p-4 md:p-6 grid gap-4 md:gap-5 grid-rows-[auto_1fr_auto] relative z-10",
         ].join(" ")}
       >
         {/* Header */}
         <header className="flex items-center justify-between">
-          <h1
-            className={[
-              "font-semibold tracking-tight",
-              isPortraitScreen ? "text-[clamp(26px,5vw,56px)]" : "text-[clamp(28px,3.2vw,56px)]",
-            ].join(" ")}
-          >
-            {masjid.name}
-          </h1>
+          <div>
+            <div className="flex items-center gap-3">
+              <span className="text-[clamp(24px,3vw,48px)]">&#x2726;</span>
+              <h1
+                className={[
+                  "font-semibold tracking-tight",
+                  isPortraitScreen ? "text-[clamp(24px,4.5vw,52px)]" : "text-[clamp(26px,3vw,52px)]",
+                ].join(" ")}
+              >
+                {masjid.name}
+              </h1>
+            </div>
+            <p className="mt-1 opacity-60 text-[clamp(11px,1vw,16px)]">
+              {todayDate}
+            </p>
+          </div>
 
-          <div className="rounded-3xl bg-white/5 border border-white/10 px-6 py-4">
-            <div className="font-semibold tabular-nums text-[clamp(28px,3vw,56px)]">
+          <div className="rounded-2xl islamic-card px-6 py-4 text-center">
+            <div className="font-semibold tabular-nums text-[clamp(26px,2.8vw,52px)]">
               {clock}
             </div>
-            <div className="mt-1 text-[clamp(12px,1.1vw,18px)] opacity-70 tabular-nums">
-              Next: <span className="font-semibold">{next.key.toUpperCase()}</span>{" "}
-              <span className="opacity-70">at</span>{" "}
-              <span className="font-semibold">{formatTime(next.at)}</span>{" "}
-              <span className="opacity-70">(in</span>{" "}
-              <span className="font-semibold">{countdown}</span>
-              <span className="opacity-70">)</span>
+            <div className="mt-1 text-[clamp(11px,1vw,16px)] opacity-70 tabular-nums">
+              Next: <span className="font-semibold text-amber-300">{nextLabel}</span>{" "}
+              in <span className="font-semibold text-amber-300">{countdown}</span>
             </div>
           </div>
         </header>
@@ -274,13 +311,25 @@ export default function DisplayPage() {
             const isNext = next.key === t.key && next.at.getTime() === adhanToday[t.key].getTime();
             const isSunrise = t.key === "sunrise";
 
+            if ("isJummah" in t && t.isJummah) {
+              return (
+                <JummahTile
+                  key={t.key}
+                  adhan={adhan}
+                  jummah1={fmt12From24("12:15")}
+                  jummah2={fmt12From24("13:15")}
+                  highlight={isNext}
+                />
+              );
+            }
+
             return (
               <Tile
                 key={t.key}
                 title={t.title}
                 adhan={adhan}
                 hideAdhanLabel={isSunrise}
-                jamaat={"jamaat" in t ? fmt12From24(t.jamaat) : undefined}
+                jamaat={"jamaat" in t && t.jamaat ? fmt12From24(t.jamaat) : undefined}
                 highlight={isNext}
               />
             );
@@ -288,35 +337,81 @@ export default function DisplayPage() {
         </section>
 
         {/* Footer */}
-        <footer
-          className={[
-            "rounded-3xl bg-white/5 border border-white/10 flex items-center justify-between",
-            isPortraitScreen ? "px-5 py-4 gap-4" : "px-8 py-4 gap-8",
-          ].join(" ")}
-        >
-          <div className="min-w-0">
-           {/* src/app/display/page.tsx - Footer snippet */}
-<div className="text-[clamp(16px,1.6vw,30px)]">
-  Jumu&apos;ah:{" "}
-  <span className="font-semibold">
-    {[...(jamaat.jummah || []), ...(jamaat.jummah2 || [])]
-      .map((j) => fmt12From24(j.khutbah))
-      .join("   •   ")}
-  </span>
-</div>
+        <footer className="rounded-2xl islamic-card flex items-center justify-between px-6 py-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="text-[clamp(14px,1.4vw,24px)] text-amber-400">&#9774;</span>
+            <div className="text-[clamp(14px,1.4vw,26px)]">
+              Jumu&apos;ah:{" "}
+              <span className="font-semibold text-amber-300">
+                1st &mdash; {fmt12From24("12:15")}
+                &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+                2nd &mdash; {fmt12From24("13:15")}
+              </span>
+            </div>
           </div>
 
           <div className="text-right shrink-0">
-            <div className="text-[clamp(12px,1.1vw,18px)] opacity-70">
+            <div className="text-[clamp(11px,1vw,16px)] opacity-60">
               Next Prayer
             </div>
-            <div className="text-[clamp(16px,1.6vw,28px)] font-semibold tabular-nums">
-              {next.key.toUpperCase()} • {formatTime(next.at)} • {countdown}
+            <div className="text-[clamp(14px,1.4vw,24px)] font-semibold tabular-nums">
+              <span className="text-amber-300">{nextLabel}</span> &bull; {formatTime(next.at)} &bull; {countdown}
             </div>
           </div>
         </footer>
       </div>
     </main>
+  );
+}
+
+/* ================= Jummah Tile ================= */
+
+function JummahTile({
+  adhan,
+  jummah1,
+  jummah2,
+  highlight,
+}: {
+  adhan: string;
+  jummah1: string;
+  jummah2: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      className={[
+        "rounded-2xl border p-5 flex flex-col justify-center min-h-0 transition-transform duration-300",
+        highlight
+          ? "jummah-tile-highlight scale-[1.01]"
+          : "jummah-tile",
+      ].join(" ")}
+    >
+      <div className="flex items-center gap-2">
+        <span className="text-[clamp(16px,1.4vw,28px)]">&#x1F54C;</span>
+        <span className="font-bold text-amber-300 text-[clamp(18px,1.6vw,34px)]">
+          Jummah
+        </span>
+      </div>
+
+      <div className="mt-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="opacity-70 text-[clamp(11px,0.9vw,16px)]">1st Jummah</span>
+          <span className="font-semibold tabular-nums text-[clamp(20px,2.2vw,48px)] leading-none text-amber-200">
+            {jummah1}
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="opacity-70 text-[clamp(11px,0.9vw,16px)]">2nd Jummah</span>
+          <span className="font-semibold tabular-nums text-[clamp(20px,2.2vw,48px)] leading-none text-amber-200">
+            {jummah2}
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-2 opacity-50 text-[clamp(10px,0.8vw,14px)]">
+        Adhan: {adhan}
+      </div>
+    </div>
   );
 }
 
@@ -338,10 +433,10 @@ function Tile({
   return (
     <div
       className={[
-        "rounded-3xl border p-6 flex flex-col justify-center min-h-0 transition-transform duration-300",
+        "rounded-2xl border p-6 flex flex-col justify-center min-h-0 transition-transform duration-300",
         highlight
-          ? "bg-emerald-500/12 border-emerald-300/50 shadow-[0_0_0_1px_rgba(52,211,153,0.25)] scale-[1.01]"
-          : "bg-white/5 border-white/10",
+          ? "islamic-tile-highlight scale-[1.01]"
+          : "islamic-tile",
       ].join(" ")}
     >
       <div className="font-semibold opacity-90 text-[clamp(18px,1.6vw,34px)]">
@@ -350,7 +445,7 @@ function Tile({
 
       <div className="mt-4 grid grid-cols-2 gap-5 items-end min-h-0">
         <div className="min-w-0">
-          <div className="opacity-70 text-[clamp(12px,1vw,18px)]">
+          <div className="opacity-60 text-[clamp(11px,0.9vw,16px)]">
             {hideAdhanLabel ? "\u00A0" : "Adhan"}
           </div>
           <div className="mt-2 font-semibold tracking-tight tabular-nums text-[clamp(28px,3vw,64px)] leading-none">
@@ -360,8 +455,8 @@ function Tile({
 
         {jamaat ? (
           <div className="text-right min-w-0">
-            <div className="opacity-70 text-[clamp(12px,1vw,18px)]">Jamaat</div>
-            <div className="mt-2 font-semibold tracking-tight tabular-nums text-[clamp(28px,3vw,64px)] leading-none">
+            <div className="opacity-60 text-[clamp(11px,0.9vw,16px)]">Jamaat</div>
+            <div className="mt-2 font-semibold tracking-tight tabular-nums text-[clamp(28px,3vw,64px)] leading-none text-emerald-300">
               {jamaat}
             </div>
           </div>

@@ -24,3 +24,61 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ================= Islamic Theme ================= */
+
+.islamic-bg {
+  background: linear-gradient(170deg, #0c1a0e 0%, #0a0f1a 30%, #0d1117 60%, #0a1628 100%);
+  position: relative;
+  min-height: 100vh;
+}
+
+.islamic-pattern-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background-image:
+    radial-gradient(ellipse 600px 400px at 10% 10%, rgba(16, 185, 129, 0.06), transparent),
+    radial-gradient(ellipse 500px 350px at 90% 80%, rgba(217, 175, 78, 0.05), transparent),
+    radial-gradient(ellipse 300px 300px at 50% 50%, rgba(16, 185, 129, 0.03), transparent);
+}
+
+.islamic-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.islamic-tile {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.islamic-tile-highlight {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(52, 211, 153, 0.4);
+  box-shadow:
+    0 0 20px rgba(16, 185, 129, 0.1),
+    0 0 0 1px rgba(52, 211, 153, 0.2),
+    inset 0 1px 0 rgba(52, 211, 153, 0.1);
+}
+
+.jummah-tile {
+  background: linear-gradient(135deg, rgba(217, 175, 78, 0.08), rgba(16, 185, 129, 0.06));
+  border-color: rgba(217, 175, 78, 0.2);
+  box-shadow: inset 0 1px 0 rgba(217, 175, 78, 0.06);
+}
+
+.jummah-tile-highlight {
+  background: linear-gradient(135deg, rgba(217, 175, 78, 0.15), rgba(16, 185, 129, 0.1));
+  border-color: rgba(217, 175, 78, 0.45);
+  box-shadow:
+    0 0 24px rgba(217, 175, 78, 0.12),
+    0 0 0 1px rgba(217, 175, 78, 0.25),
+    inset 0 1px 0 rgba(217, 175, 78, 0.12);
+}
