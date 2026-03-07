@@ -300,7 +300,7 @@ export default function DisplayPage() {
   const currentAyah = QURAN_AYAHS[ayahIndex];
 
   return (
-    <main className="h-screen w-screen overflow-hidden islamic-bg text-white flex flex-col">
+    <main className="h-screen w-screen overflow-hidden islamic-bg text-[#1a1a2e] flex flex-col">
       {/* Decorative Islamic pattern overlay */}
       <div className="islamic-pattern-overlay" />
 
@@ -339,9 +339,9 @@ export default function DisplayPage() {
             <div className="font-semibold tabular-nums text-[clamp(26px,2.8vw,52px)]">
               {clock}
             </div>
-            <div className="mt-1 text-[clamp(11px,1vw,16px)] opacity-70 tabular-nums">
-              Next: <span className="font-semibold text-amber-300">{nextLabel}</span>{" "}
-              in <span className="font-semibold text-amber-300">{countdown}</span>
+            <div className="mt-1 text-[clamp(11px,1vw,16px)] opacity-60 tabular-nums">
+              Next: <span className="font-semibold text-amber-700">{nextLabel}</span>{" "}
+              in <span className="font-semibold text-amber-700">{countdown}</span>
             </div>
           </div>
         </header>
@@ -386,10 +386,10 @@ export default function DisplayPage() {
         {/* Footer */}
         <footer className="rounded-2xl islamic-card flex items-center justify-between px-6 py-3">
           <div className="flex items-center gap-3 min-w-0">
-            <span className="text-[clamp(14px,1.4vw,24px)] text-amber-400">&#9774;</span>
+            <span className="text-[clamp(14px,1.4vw,24px)] text-amber-700">&#9774;</span>
             <div className="text-[clamp(14px,1.4vw,26px)]">
               Jumu&apos;ah:{" "}
-              <span className="font-semibold text-amber-300">
+              <span className="font-semibold text-amber-800">
                 1st &mdash; {fmt12From24(jummah1Time)}
                 &nbsp;&nbsp;&bull;&nbsp;&nbsp;
                 2nd &mdash; {fmt12From24(jummah2Time)}
@@ -398,11 +398,11 @@ export default function DisplayPage() {
           </div>
 
           <div className="text-right shrink-0">
-            <div className="text-[clamp(11px,1vw,16px)] opacity-60">
+            <div className="text-[clamp(11px,1vw,16px)] opacity-50">
               Next Prayer
             </div>
             <div className="text-[clamp(14px,1.4vw,24px)] font-semibold tabular-nums">
-              <span className="text-amber-300">{nextLabel}</span> &bull; {formatTime(next.at)} &bull; {countdown}
+              <span className="text-amber-700">{nextLabel}</span> &bull; {formatTime(next.at)} &bull; {countdown}
             </div>
           </div>
         </footer>
@@ -446,27 +446,27 @@ function JummahTile({
     >
       <div className="relative z-10 flex items-center gap-2">
         <span className="text-[clamp(16px,1.4vw,28px)]">&#x1F54C;</span>
-        <span className="font-bold text-amber-300 text-[clamp(18px,1.6vw,34px)]">
+        <span className="font-bold text-amber-800 text-[clamp(18px,1.6vw,34px)]">
           Jummah
         </span>
       </div>
 
       <div className="relative z-10 mt-3 space-y-2">
         <div className="flex items-center justify-between">
-          <span className="font-medium text-amber-100/80 text-[clamp(14px,1.3vw,24px)]">1st Jummah</span>
-          <span className="font-semibold tabular-nums text-[clamp(20px,2.2vw,48px)] leading-none text-amber-200">
+          <span className="font-medium text-amber-900/60 text-[clamp(14px,1.3vw,24px)]">1st Jummah</span>
+          <span className="font-semibold tabular-nums text-[clamp(20px,2.2vw,48px)] leading-none text-amber-800">
             {jummah1}
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="font-medium text-amber-100/80 text-[clamp(14px,1.3vw,24px)]">2nd Jummah</span>
-          <span className="font-semibold tabular-nums text-[clamp(20px,2.2vw,48px)] leading-none text-amber-200">
+          <span className="font-medium text-amber-900/60 text-[clamp(14px,1.3vw,24px)]">2nd Jummah</span>
+          <span className="font-semibold tabular-nums text-[clamp(20px,2.2vw,48px)] leading-none text-amber-800">
             {jummah2}
           </span>
         </div>
       </div>
 
-      <div className="relative z-10 mt-2 opacity-50 text-[clamp(10px,0.8vw,14px)]">
+      <div className="relative z-10 mt-2 opacity-40 text-[clamp(10px,0.8vw,14px)]">
         Adhan: {adhan}
       </div>
     </div>
@@ -497,29 +497,29 @@ function Tile({
           : "islamic-tile",
       ].join(" ")}
     >
-      <div className="font-semibold opacity-90 text-[clamp(18px,1.6vw,34px)]">
+      <div className="font-semibold opacity-80 text-[clamp(18px,1.6vw,34px)]">
         {title}
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-5 items-end min-h-0">
         <div className="min-w-0">
-          <div className="opacity-60 text-[clamp(11px,0.9vw,16px)]">
+          <div className="opacity-50 text-[clamp(11px,0.9vw,16px)]">
             {hideAdhanLabel ? "\u00A0" : "Adhan"}
           </div>
-          <div className="mt-2 font-semibold tracking-tight tabular-nums text-[clamp(28px,3vw,64px)] leading-none">
+          <div className="mt-2 font-semibold tracking-tight tabular-nums text-[clamp(28px,3vw,64px)] leading-none text-[#1a1a2e]">
             {adhan}
           </div>
         </div>
 
         {jamaat ? (
           <div className="text-right min-w-0">
-            <div className="opacity-60 text-[clamp(11px,0.9vw,16px)]">Jamaat</div>
-            <div className="mt-2 font-semibold tracking-tight tabular-nums text-[clamp(28px,3vw,64px)] leading-none text-emerald-300">
+            <div className="opacity-50 text-[clamp(11px,0.9vw,16px)]">Jamaat</div>
+            <div className="mt-2 font-semibold tracking-tight tabular-nums text-[clamp(28px,3vw,64px)] leading-none text-emerald-700">
               {jamaat}
             </div>
           </div>
         ) : (
-          <div className="text-right opacity-25 text-[clamp(24px,2.2vw,48px)] leading-none">
+          <div className="text-right opacity-20 text-[clamp(24px,2.2vw,48px)] leading-none">
             —
           </div>
         )}

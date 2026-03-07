@@ -164,7 +164,7 @@ export default function AdminPage() {
 
   if (!loggedIn) {
     return (
-      <main className="min-h-screen islamic-bg text-white">
+      <main className="min-h-screen islamic-bg text-[#1a1a2e]">
         <div className="islamic-pattern-overlay" />
         <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6">
           <div className="w-full max-w-md space-y-6">
@@ -178,12 +178,12 @@ export default function AdminPage() {
                 priority
               />
               <h1 className="mt-4 text-2xl font-bold">{masjid.name}</h1>
-              <p className="mt-1 text-white/60 text-sm">Admin Panel</p>
+              <p className="mt-1 text-[#1a1a2e]/60 text-sm">Admin Panel</p>
             </div>
             <div className="rounded-2xl islamic-card p-6 space-y-4">
               <input
                 type="password"
-                className="w-full p-3 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-emerald-500/50 transition-colors"
+                className="w-full p-3 bg-[#1a1a2e]/5 border border-[#1a1a2e]/10 rounded-xl outline-none focus:border-emerald-500/50 transition-colors"
                 value={passcode}
                 onChange={(e) => setPasscode(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -197,10 +197,10 @@ export default function AdminPage() {
               >
                 {loggingIn ? "Logging in..." : "Login"}
               </button>
-              {status && <p className="text-sm text-center text-red-300">{status}</p>}
+              {status && <p className="text-sm text-center text-red-600">{status}</p>}
             </div>
             <div className="text-center">
-              <a href="/" className="text-sm text-white/50 hover:text-white/80 transition-colors">
+              <a href="/" className="text-sm text-[#1a1a2e]/50 hover:text-[#1a1a2e]/80 transition-colors">
                 &larr; Back to Home
               </a>
             </div>
@@ -211,7 +211,7 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen islamic-bg text-white">
+    <main className="min-h-screen islamic-bg text-[#1a1a2e]">
       <div className="islamic-pattern-overlay" />
       <div className="relative z-10 p-6 md:p-10">
         <div className="max-w-3xl mx-auto space-y-6">
@@ -227,11 +227,11 @@ export default function AdminPage() {
               />
               <div>
                 <h1 className="text-2xl font-bold">Update Jamaat Times</h1>
-                <p className="text-sm text-white/50">{masjid.name}</p>
+                <p className="text-sm text-[#1a1a2e]/50">{masjid.name}</p>
               </div>
             </div>
             <div className="flex gap-3">
-              <a href="/" className="px-4 py-2 rounded-xl border border-white/10 text-white/70 hover:bg-white/5 transition-colors text-sm">
+              <a href="/" className="px-4 py-2 rounded-xl border border-[#1a1a2e]/10 text-[#1a1a2e]/70 hover:bg-[#1a1a2e]/5 transition-colors text-sm">
                 Home
               </a>
               <button onClick={save} disabled={saving} className="bg-emerald-500 px-6 py-2 rounded-xl text-black font-bold hover:bg-emerald-400 transition-colors disabled:opacity-50">
@@ -243,24 +243,24 @@ export default function AdminPage() {
           {/* Daily Prayers */}
           <section className="rounded-2xl islamic-card p-6">
             <h2 className="text-lg font-semibold mb-4">Daily Prayer Jamaat Times</h2>
-            <p className="text-sm text-white/50 mb-4">Enter times in 24-hour format (HH:MM)</p>
+            <p className="text-sm text-[#1a1a2e]/50 mb-4">Enter times in 24-hour format (HH:MM)</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {PRAYER_KEYS.map((key) => (
-                <div key={key} className="rounded-xl border border-white/10 bg-black/20 p-4">
-                  <label className="block text-sm font-semibold text-white/80 mb-2 capitalize">{key}</label>
+                <div key={key} className="rounded-xl border border-emerald-700/10 bg-white/50 p-4">
+                  <label className="block text-sm font-semibold text-[#1a1a2e]/80 mb-2 capitalize">{key}</label>
                   <input
                     className={[
-                      "w-full p-3 bg-white/5 border rounded-xl outline-none transition-colors text-lg tabular-nums",
+                      "w-full p-3 bg-white/80 border rounded-xl outline-none transition-colors text-lg tabular-nums",
                       data[key] && !isValidTime(data[key])
                         ? "border-red-500/50 focus:border-red-500"
-                        : "border-white/10 focus:border-emerald-500/50",
+                        : "border-[#1a1a2e]/10 focus:border-emerald-500/50",
                     ].join(" ")}
                     value={data[key]}
                     onChange={(e) => setData({ ...data, [key]: e.target.value })}
                     placeholder="HH:MM"
                   />
                   {data[key] && isValidTime(data[key]) && (
-                    <div className="mt-1 text-xs text-emerald-400/70">{fmt12From24(normalizeTime(data[key]))}</div>
+                    <div className="mt-1 text-xs text-emerald-600/70">{fmt12From24(normalizeTime(data[key]))}</div>
                   )}
                 </div>
               ))}
@@ -272,24 +272,24 @@ export default function AdminPage() {
             <div className="flex justify-between items-center mb-4">
               <div>
                 <h2 className="text-lg font-semibold">Jumu&apos;ah Slots</h2>
-                <p className="text-sm text-white/50 mt-1">Khutbah and Salah times for each Friday session</p>
+                <p className="text-sm text-[#1a1a2e]/50 mt-1">Khutbah and Salah times for each Friday session</p>
               </div>
               <button
                 onClick={() => setData({...data, jummah: [...data.jummah, {khutbah: "", salah: ""}]})}
-                className="text-sm bg-amber-500/20 border border-amber-500/30 text-amber-200 px-4 py-2 rounded-xl hover:bg-amber-500/30 transition-colors"
+                className="text-sm bg-amber-500/15 border border-amber-600/25 text-amber-800 px-4 py-2 rounded-xl hover:bg-amber-500/25 transition-colors"
               >
                 + Add Slot
               </button>
             </div>
             <div className="space-y-4">
               {data.jummah.map((j, i) => (
-                <div key={i} className="rounded-xl border border-amber-500/20 bg-amber-900/10 p-4">
+                <div key={i} className="rounded-xl border border-amber-600/15 bg-amber-50/50 p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-semibold text-amber-300">Jummah {i + 1}</span>
+                    <span className="text-sm font-semibold text-amber-800">Jummah {i + 1}</span>
                     {data.jummah.length > 1 && (
                       <button
                         onClick={() => removeJummahSlot(i)}
-                        className="text-xs text-red-400/70 hover:text-red-400 transition-colors px-2 py-1 rounded-lg hover:bg-red-500/10"
+                        className="text-xs text-red-500/70 hover:text-red-600 transition-colors px-2 py-1 rounded-lg hover:bg-red-500/10"
                       >
                         Remove
                       </button>
@@ -297,27 +297,27 @@ export default function AdminPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs text-white/50 mb-1">Khutbah</label>
+                      <label className="block text-xs text-[#1a1a2e]/50 mb-1">Khutbah</label>
                       <input
-                        className="w-full p-3 bg-black/20 border border-white/10 rounded-xl outline-none focus:border-amber-500/50 transition-colors tabular-nums"
+                        className="w-full p-3 bg-white/80 border border-[#1a1a2e]/10 rounded-xl outline-none focus:border-amber-500/50 transition-colors tabular-nums"
                         value={j.khutbah}
                         onChange={(e) => updateJummahSlot(i, "khutbah", e.target.value)}
                         placeholder="HH:MM"
                       />
                       {j.khutbah && isValidTime(j.khutbah) && (
-                        <div className="mt-1 text-xs text-amber-400/70">{fmt12From24(normalizeTime(j.khutbah))}</div>
+                        <div className="mt-1 text-xs text-amber-700/70">{fmt12From24(normalizeTime(j.khutbah))}</div>
                       )}
                     </div>
                     <div>
-                      <label className="block text-xs text-white/50 mb-1">Salah</label>
+                      <label className="block text-xs text-[#1a1a2e]/50 mb-1">Salah</label>
                       <input
-                        className="w-full p-3 bg-black/20 border border-white/10 rounded-xl outline-none focus:border-amber-500/50 transition-colors tabular-nums"
+                        className="w-full p-3 bg-white/80 border border-[#1a1a2e]/10 rounded-xl outline-none focus:border-amber-500/50 transition-colors tabular-nums"
                         value={j.salah}
                         onChange={(e) => updateJummahSlot(i, "salah", e.target.value)}
                         placeholder="HH:MM"
                       />
                       {j.salah && isValidTime(j.salah) && (
-                        <div className="mt-1 text-xs text-amber-400/70">{fmt12From24(normalizeTime(j.salah))}</div>
+                        <div className="mt-1 text-xs text-amber-700/70">{fmt12From24(normalizeTime(j.salah))}</div>
                       )}
                     </div>
                   </div>
@@ -331,8 +331,8 @@ export default function AdminPage() {
             <div className={[
               "p-4 rounded-xl border text-center text-sm",
               status.includes("successfully") || status.includes("Saved")
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
-                : "border-red-500/30 bg-red-500/10 text-red-300",
+                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700"
+                : "border-red-500/30 bg-red-500/10 text-red-600",
             ].join(" ")}>
               {status}
             </div>
@@ -340,7 +340,7 @@ export default function AdminPage() {
 
           {/* Footer */}
           <div className="text-center pt-4">
-            <a href="/" className="text-sm text-white/40 hover:text-white/70 transition-colors">
+            <a href="/" className="text-sm text-[#1a1a2e]/40 hover:text-[#1a1a2e]/70 transition-colors">
               &larr; Back to Home
             </a>
           </div>

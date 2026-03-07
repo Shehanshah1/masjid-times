@@ -43,7 +43,7 @@ export default async function Home() {
   ];
 
   return (
-    <main className="min-h-screen islamic-bg text-white">
+    <main className="min-h-screen islamic-bg text-[#1a1a2e]">
       <div className="islamic-pattern-overlay" />
       <div className="relative z-10">
         <div className="mx-auto max-w-5xl px-6 py-10">
@@ -58,8 +58,8 @@ export default async function Home() {
                 priority
               />
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-xs text-amber-200">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-600/20 bg-emerald-600/10 px-3 py-1 text-xs text-emerald-800">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
                   Live Adhan + Jamaat
                 </div>
 
@@ -67,7 +67,7 @@ export default async function Home() {
                   {masjid.name}
                 </h1>
 
-                <p className="mt-2 text-white/70">
+                <p className="mt-2 text-[#1a1a2e]/60">
                   Prayer times calculated using {masjid.calc.method.replaceAll("_", " ")} &bull;{" "}
                   {masjid.calc.fajrAngle}&deg; / {masjid.calc.ishaAngle}&deg; &bull; Hanafi Asr
                 </p>
@@ -75,9 +75,9 @@ export default async function Home() {
             </div>
 
             <div className="rounded-2xl islamic-card px-5 py-4">
-              <div className="text-xs text-amber-300/70">Today</div>
+              <div className="text-xs text-amber-700/70">Today</div>
               <div className="mt-1 text-lg font-semibold">{today}</div>
-              <div className="mt-1 text-xs text-white/60">{masjid.timezone}</div>
+              <div className="mt-1 text-xs text-[#1a1a2e]/50">{masjid.timezone}</div>
             </div>
           </div>
 
@@ -87,7 +87,7 @@ export default async function Home() {
             <section className="rounded-2xl islamic-card p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">Today&apos;s Prayer Times</h2>
-                <div className="text-sm text-white/60">Adhan &bull; Jamaat</div>
+                <div className="text-sm text-[#1a1a2e]/50">Adhan &bull; Jamaat</div>
               </div>
 
               <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -105,9 +105,9 @@ export default async function Home() {
                 )}
               </div>
 
-              <div className="mt-6 rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-white/70">
+              <div className="mt-6 rounded-xl border border-emerald-700/10 bg-emerald-50/50 p-4 text-sm text-[#1a1a2e]/60">
                 Tip: Jamaat times are editable from the Admin panel. Display page pulls from{" "}
-                <span className="font-mono text-white/80">/api/jamaat</span>.
+                <span className="font-mono text-[#1a1a2e]/70">/api/jamaat</span>.
               </div>
             </section>
 
@@ -117,7 +117,7 @@ export default async function Home() {
                 <h3 className="text-lg font-semibold flex items-center gap-2">
                   <span>&#x1F54C;</span> Jumu&apos;ah
                 </h3>
-                <p className="mt-1 text-sm text-white/70">
+                <p className="mt-1 text-sm text-[#1a1a2e]/60">
                   Friday prayer schedule
                 </p>
 
@@ -133,14 +133,14 @@ export default async function Home() {
                   <LinkButton href="/display" label="Open TV Display Mode" />
                   <LinkButton href="/admin" label="Admin (Edit Jamaat Times)" />
                 </div>
-                <p className="mt-4 text-xs text-white/50">
+                <p className="mt-4 text-xs text-[#1a1a2e]/40">
                   Display mode is built for TVs / kiosks.
                 </p>
               </section>
             </aside>
           </div>
 
-          <footer className="mt-10 border-t border-white/10 pt-6 text-center text-xs text-white/50">
+          <footer className="mt-10 border-t border-[#1a1a2e]/10 pt-6 text-center text-xs text-[#1a1a2e]/40">
             &copy; {new Date().getFullYear()} {masjid.name} &bull; Times shown in{" "}
             {masjid.timezone}
           </footer>
@@ -154,15 +154,15 @@ export default async function Home() {
 
 function TimeCard(props: { label: string; adhan: string; jamaat?: string }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+    <div className="rounded-xl border border-emerald-700/10 bg-white/50 p-4">
       <div className="flex items-center justify-between">
-        <div className="text-sm font-semibold text-white/90">{props.label}</div>
+        <div className="text-sm font-semibold text-[#1a1a2e]/80">{props.label}</div>
         {props.jamaat ? (
-          <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[11px] text-emerald-200">
+          <span className="rounded-full border border-emerald-600/20 bg-emerald-600/10 px-2 py-0.5 text-[11px] text-emerald-700">
             Jamaat
           </span>
         ) : (
-          <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-white/60">
+          <span className="rounded-full border border-[#1a1a2e]/10 bg-[#1a1a2e]/5 px-2 py-0.5 text-[11px] text-[#1a1a2e]/40">
             &mdash;
           </span>
         )}
@@ -170,15 +170,15 @@ function TimeCard(props: { label: string; adhan: string; jamaat?: string }) {
 
       <div className="mt-3 grid grid-cols-2 gap-3">
         <div>
-          <div className="text-[11px] text-white/60">Adhan</div>
+          <div className="text-[11px] text-[#1a1a2e]/50">Adhan</div>
           <div className="mt-1 text-xl font-semibold tabular-nums">
             {props.adhan}
           </div>
         </div>
 
         <div className="text-right">
-          <div className="text-[11px] text-white/60">Jamaat</div>
-          <div className="mt-1 text-xl font-semibold tabular-nums text-emerald-300">
+          <div className="text-[11px] text-[#1a1a2e]/50">Jamaat</div>
+          <div className="mt-1 text-xl font-semibold tabular-nums text-emerald-700">
             {props.jamaat ? fmt12From24(props.jamaat) : "—"}
           </div>
         </div>
@@ -191,28 +191,28 @@ function JummahCard(props: { adhan: string; jummah1Time: string; jummah2Time: st
   return (
     <div className="rounded-xl border jummah-tile p-4 md:col-span-2">
       <div className="relative z-10 flex items-center justify-between">
-        <div className="text-sm font-bold text-amber-300 flex items-center gap-2">
+        <div className="text-sm font-bold text-amber-800 flex items-center gap-2">
           <span>&#x1F54C;</span> Jummah (Friday Prayer)
         </div>
-        <span className="rounded-full border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-[11px] text-amber-200">
+        <span className="rounded-full border border-amber-600/20 bg-amber-600/10 px-2 py-0.5 text-[11px] text-amber-800">
           2 Sessions
         </span>
       </div>
 
       <div className="relative z-10 mt-3 grid grid-cols-3 gap-3">
         <div>
-          <div className="text-[11px] text-white/60">Adhan</div>
+          <div className="text-[11px] text-[#1a1a2e]/50">Adhan</div>
           <div className="mt-1 text-xl font-semibold tabular-nums">{props.adhan}</div>
         </div>
         <div className="text-center">
-          <div className="text-sm font-medium text-amber-200/80">1st Jummah</div>
-          <div className="mt-1 text-2xl font-semibold tabular-nums text-amber-200">
+          <div className="text-sm font-medium text-amber-800/70">1st Jummah</div>
+          <div className="mt-1 text-2xl font-semibold tabular-nums text-amber-800">
             {fmt12From24(props.jummah1Time)}
           </div>
         </div>
         <div className="text-right">
-          <div className="text-sm font-medium text-amber-200/80">2nd Jummah</div>
-          <div className="mt-1 text-2xl font-semibold tabular-nums text-amber-200">
+          <div className="text-sm font-medium text-amber-800/70">2nd Jummah</div>
+          <div className="mt-1 text-2xl font-semibold tabular-nums text-amber-800">
             {fmt12From24(props.jummah2Time)}
           </div>
         </div>
@@ -223,9 +223,9 @@ function JummahCard(props: { adhan: string; jummah1Time: string; jummah2Time: st
 
 function InfoRow(props: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 p-4">
-      <div className="text-sm text-white/70">{props.label}</div>
-      <div className="text-lg font-semibold tabular-nums text-amber-200">{props.value}</div>
+    <div className="flex items-center justify-between rounded-xl border border-amber-700/10 bg-amber-50/50 p-4">
+      <div className="text-sm text-[#1a1a2e]/60">{props.label}</div>
+      <div className="text-lg font-semibold tabular-nums text-amber-800">{props.value}</div>
     </div>
   );
 }
@@ -234,7 +234,7 @@ function LinkButton(props: { href: string; label: string }) {
   return (
     <a
       href={props.href}
-      className="block rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-semibold text-white/90 hover:bg-white/10 transition-colors"
+      className="block rounded-xl border border-emerald-700/10 bg-white/50 px-4 py-3 text-sm font-semibold text-[#1a1a2e]/80 hover:bg-emerald-50 transition-colors"
     >
       {props.label}
     </a>
