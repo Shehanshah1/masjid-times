@@ -497,13 +497,13 @@ function Tile({
           : "islamic-tile",
       ].join(" ")}
     >
-      <div className="font-semibold opacity-90 text-[clamp(18px,1.6vw,34px)]">
+      <div className="relative z-10 font-semibold opacity-90 text-[clamp(18px,1.6vw,34px)]">
         {title}
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-5 items-end min-h-0">
+      <div className="relative z-10 mt-4 grid grid-cols-2 gap-5 items-end min-h-0">
         <div className="min-w-0">
-          <div className="opacity-60 text-[clamp(11px,0.9vw,16px)]">
+          <div className="opacity-50 text-[clamp(12px,1vw,17px)]">
             {hideAdhanLabel ? "\u00A0" : "Adhan"}
           </div>
           <div className="mt-2 font-semibold tracking-tight tabular-nums text-[clamp(28px,3vw,64px)] leading-none">
@@ -513,7 +513,7 @@ function Tile({
 
         {jamaat ? (
           <div className="text-right min-w-0">
-            <div className="opacity-60 text-[clamp(11px,0.9vw,16px)]">Jamaat</div>
+            <div className="opacity-50 text-[clamp(12px,1vw,17px)]">Jamaat</div>
             <div className="mt-2 font-semibold tracking-tight tabular-nums text-[clamp(28px,3vw,64px)] leading-none text-emerald-300">
               {jamaat}
             </div>
