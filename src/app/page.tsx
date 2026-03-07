@@ -5,9 +5,18 @@ import { fmt12From24 } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
+function isFridayInTZ(date: Date, timeZone: string): boolean {
+  const dayName = new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    timeZone,
+  }).format(date);
+  return dayName === "Friday";
+}
+
 export default async function Home() {
   const adhan = getAdhanTimes(new Date());
   const jamaat = await getJamaatTimes();
+  const friday = isFridayInTZ(new Date(), masjid.timezone);
 
   const today = new Intl.DateTimeFormat("en-US", {
     weekday: "long",
@@ -20,38 +29,39 @@ export default async function Home() {
   const rows = [
     { label: "Fajr", adhan: fmtTime(adhan.fajr), jamaat: jamaat.fajr },
     { label: "Sunrise", adhan: fmtTime(adhan.sunrise) },
-    { label: "Dhuhr", adhan: fmtTime(adhan.dhuhr), jamaat: jamaat.dhuhr },
+    ...(friday
+      ? [{ label: "Jummah", adhan: fmtTime(adhan.dhuhr), jamaat: jamaat.dhuhr, isJummah: true }]
+      : [{ label: "Dhuhr", adhan: fmtTime(adhan.dhuhr), jamaat: jamaat.dhuhr }]),
     { label: "Asr", adhan: fmtTime(adhan.asr), jamaat: jamaat.asr },
     { label: "Maghrib", adhan: fmtTime(adhan.maghrib), jamaat: jamaat.maghrib },
     { label: "Isha", adhan: fmtTime(adhan.isha), jamaat: jamaat.isha },
   ];
 
-  const jummah0 = jamaat.jummah?.[0];
-
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
-      {/* Top gradient / hero */}
-      <div className="bg-gradient-to-b from-slate-950 via-slate-950 to-slate-900">
+    <main className="min-h-screen islamic-bg text-white">
+      <div className="islamic-pattern-overlay" />
+      <div className="relative z-10">
         <div className="mx-auto max-w-5xl px-6 py-10">
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-xs text-amber-200">
                 <span className="h-2 w-2 rounded-full bg-emerald-400" />
                 Live Adhan + Jamaat
               </div>
 
-              <h1 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
+              <h1 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl flex items-center gap-3">
+                <span>&#x2726;</span>
                 {masjid.name}
               </h1>
 
               <p className="mt-2 text-white/70">
-                Prayer times calculated using {masjid.calc.method.replaceAll("_", " ")} •{" "}
-                {masjid.calc.fajrAngle}° / {masjid.calc.ishaAngle}° • Hanafi Asr
+                Prayer times calculated using {masjid.calc.method.replaceAll("_", " ")} &bull;{" "}
+                {masjid.calc.fajrAngle}&deg; / {masjid.calc.ishaAngle}&deg; &bull; Hanafi Asr
               </p>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
-              <div className="text-xs text-white/60">Today</div>
+            <div className="rounded-2xl islamic-card px-5 py-4">
+              <div className="text-xs text-amber-300/70">Today</div>
               <div className="mt-1 text-lg font-semibold">{today}</div>
               <div className="mt-1 text-xs text-white/60">{masjid.timezone}</div>
             </div>
@@ -60,24 +70,28 @@ export default async function Home() {
           {/* Main grid */}
           <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_320px]">
             {/* Times card */}
-            <section className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+            <section className="rounded-2xl islamic-card p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Today’s Prayer Times</h2>
-                <div className="text-sm text-white/60">Adhan • Jamaat</div>
+                <h2 className="text-xl font-semibold">Today&apos;s Prayer Times</h2>
+                <div className="text-sm text-white/60">Adhan &bull; Jamaat</div>
               </div>
 
               <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
-                {rows.map((r) => (
-                  <TimeCard
-                    key={r.label}
-                    label={r.label}
-                    adhan={r.adhan}
-                    jamaat={r.jamaat}
-                  />
-                ))}
+                {rows.map((r) =>
+                  "isJummah" in r && r.isJummah ? (
+                    <JummahCard key={r.label} adhan={r.adhan} />
+                  ) : (
+                    <TimeCard
+                      key={r.label}
+                      label={r.label}
+                      adhan={r.adhan}
+                      jamaat={r.jamaat}
+                    />
+                  )
+                )}
               </div>
 
-              <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-white/70">
+              <div className="mt-6 rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-white/70">
                 Tip: Jamaat times are editable from the Admin panel. Display page pulls from{" "}
                 <span className="font-mono text-white/80">/api/jamaat</span>.
               </div>
@@ -85,24 +99,21 @@ export default async function Home() {
 
             {/* Sidebar card */}
             <aside className="space-y-6">
-              <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
-                <h3 className="text-lg font-semibold">Jumu’ah</h3>
+              <section className="rounded-2xl islamic-card p-6">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <span>&#x1F54C;</span> Jumu&apos;ah
+                </h3>
                 <p className="mt-1 text-sm text-white/70">
-                  Current schedule (Admin controlled)
+                  Friday prayer schedule
                 </p>
 
                 <div className="mt-4 grid gap-3">
-                  <InfoRow label="Khutbah" value={fmt12From24(jummah0?.khutbah)} />
-                  <InfoRow label="Salah" value={fmt12From24(jummah0?.salah)} />
-                </div>
-
-                <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-white/70">
-                  Need multiple Jumu’ah slots? Add more entries to{" "}
-                  <span className="font-mono text-white/80">jummah[]</span>.
+                  <InfoRow label="1st Jummah" value={fmt12From24("12:15")} />
+                  <InfoRow label="2nd Jummah" value={fmt12From24("13:15")} />
                 </div>
               </section>
 
-              <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
+              <section className="rounded-2xl islamic-card p-6">
                 <h3 className="text-lg font-semibold">Quick Links</h3>
                 <div className="mt-4 grid gap-3">
                   <LinkButton href="/display" label="Open TV Display Mode" />
@@ -116,7 +127,7 @@ export default async function Home() {
           </div>
 
           <footer className="mt-10 border-t border-white/10 pt-6 text-center text-xs text-white/50">
-            © {new Date().getFullYear()} {masjid.name} • Times shown in{" "}
+            &copy; {new Date().getFullYear()} {masjid.name} &bull; Times shown in{" "}
             {masjid.timezone}
           </footer>
         </div>
@@ -129,7 +140,7 @@ export default async function Home() {
 
 function TimeCard(props: { label: string; adhan: string; jamaat?: string }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+    <div className="rounded-xl border border-white/10 bg-black/20 p-4">
       <div className="flex items-center justify-between">
         <div className="text-sm font-semibold text-white/90">{props.label}</div>
         {props.jamaat ? (
@@ -138,7 +149,7 @@ function TimeCard(props: { label: string; adhan: string; jamaat?: string }) {
           </span>
         ) : (
           <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-white/60">
-            —
+            &mdash;
           </span>
         )}
       </div>
@@ -153,8 +164,42 @@ function TimeCard(props: { label: string; adhan: string; jamaat?: string }) {
 
         <div className="text-right">
           <div className="text-[11px] text-white/60">Jamaat</div>
-          <div className="mt-1 text-xl font-semibold tabular-nums">
-            {props.jamaat ?? "—"}
+          <div className="mt-1 text-xl font-semibold tabular-nums text-emerald-300">
+            {props.jamaat ? fmt12From24(props.jamaat) : "—"}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function JummahCard(props: { adhan: string }) {
+  return (
+    <div className="rounded-xl border border-amber-400/30 bg-amber-900/15 p-4 md:col-span-2">
+      <div className="flex items-center justify-between">
+        <div className="text-sm font-bold text-amber-300 flex items-center gap-2">
+          <span>&#x1F54C;</span> Jummah (Friday Prayer)
+        </div>
+        <span className="rounded-full border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-[11px] text-amber-200">
+          2 Sessions
+        </span>
+      </div>
+
+      <div className="mt-3 grid grid-cols-3 gap-3">
+        <div>
+          <div className="text-[11px] text-white/60">Adhan</div>
+          <div className="mt-1 text-xl font-semibold tabular-nums">{props.adhan}</div>
+        </div>
+        <div className="text-center">
+          <div className="text-[11px] text-amber-300/70">1st Jummah</div>
+          <div className="mt-1 text-xl font-semibold tabular-nums text-amber-200">
+            {fmt12From24("12:15")}
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-[11px] text-amber-300/70">2nd Jummah</div>
+          <div className="mt-1 text-xl font-semibold tabular-nums text-amber-200">
+            {fmt12From24("13:15")}
           </div>
         </div>
       </div>
@@ -164,9 +209,9 @@ function TimeCard(props: { label: string; adhan: string; jamaat?: string }) {
 
 function InfoRow(props: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 p-4">
+    <div className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 p-4">
       <div className="text-sm text-white/70">{props.label}</div>
-      <div className="text-lg font-semibold tabular-nums">{props.value}</div>
+      <div className="text-lg font-semibold tabular-nums text-amber-200">{props.value}</div>
     </div>
   );
 }
@@ -175,7 +220,7 @@ function LinkButton(props: { href: string; label: string }) {
   return (
     <a
       href={props.href}
-      className="block rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-semibold text-white/90 hover:bg-black/30"
+      className="block rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-semibold text-white/90 hover:bg-white/10 transition-colors"
     >
       {props.label}
     </a>
