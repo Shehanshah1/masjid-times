@@ -444,29 +444,29 @@ function JummahTile({
           : "jummah-tile",
       ].join(" ")}
     >
-      <div className="flex items-center gap-2">
+      <div className="relative z-10 flex items-center gap-2">
         <span className="text-[clamp(16px,1.4vw,28px)]">&#x1F54C;</span>
         <span className="font-bold text-amber-300 text-[clamp(18px,1.6vw,34px)]">
           Jummah
         </span>
       </div>
 
-      <div className="mt-3 space-y-2">
+      <div className="relative z-10 mt-3 space-y-2">
         <div className="flex items-center justify-between">
-          <span className="opacity-70 text-[clamp(11px,0.9vw,16px)]">1st Jummah</span>
+          <span className="font-medium text-amber-100/80 text-[clamp(14px,1.3vw,24px)]">1st Jummah</span>
           <span className="font-semibold tabular-nums text-[clamp(20px,2.2vw,48px)] leading-none text-amber-200">
             {jummah1}
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="opacity-70 text-[clamp(11px,0.9vw,16px)]">2nd Jummah</span>
+          <span className="font-medium text-amber-100/80 text-[clamp(14px,1.3vw,24px)]">2nd Jummah</span>
           <span className="font-semibold tabular-nums text-[clamp(20px,2.2vw,48px)] leading-none text-amber-200">
             {jummah2}
           </span>
         </div>
       </div>
 
-      <div className="mt-2 opacity-50 text-[clamp(10px,0.8vw,14px)]">
+      <div className="relative z-10 mt-2 opacity-50 text-[clamp(10px,0.8vw,14px)]">
         Adhan: {adhan}
       </div>
     </div>

@@ -189,8 +189,8 @@ function TimeCard(props: { label: string; adhan: string; jamaat?: string }) {
 
 function JummahCard(props: { adhan: string; jummah1Time: string; jummah2Time: string }) {
   return (
-    <div className="rounded-xl border border-amber-400/30 bg-amber-900/15 p-4 md:col-span-2">
-      <div className="flex items-center justify-between">
+    <div className="rounded-xl border jummah-tile p-4 md:col-span-2">
+      <div className="relative z-10 flex items-center justify-between">
         <div className="text-sm font-bold text-amber-300 flex items-center gap-2">
           <span>&#x1F54C;</span> Jummah (Friday Prayer)
         </div>
@@ -199,20 +199,20 @@ function JummahCard(props: { adhan: string; jummah1Time: string; jummah2Time: st
         </span>
       </div>
 
-      <div className="mt-3 grid grid-cols-3 gap-3">
+      <div className="relative z-10 mt-3 grid grid-cols-3 gap-3">
         <div>
           <div className="text-[11px] text-white/60">Adhan</div>
           <div className="mt-1 text-xl font-semibold tabular-nums">{props.adhan}</div>
         </div>
         <div className="text-center">
-          <div className="text-[11px] text-amber-300/70">1st Jummah</div>
-          <div className="mt-1 text-xl font-semibold tabular-nums text-amber-200">
+          <div className="text-sm font-medium text-amber-200/80">1st Jummah</div>
+          <div className="mt-1 text-2xl font-semibold tabular-nums text-amber-200">
             {fmt12From24(props.jummah1Time)}
           </div>
         </div>
         <div className="text-right">
-          <div className="text-[11px] text-amber-300/70">2nd Jummah</div>
-          <div className="mt-1 text-xl font-semibold tabular-nums text-amber-200">
+          <div className="text-sm font-medium text-amber-200/80">2nd Jummah</div>
+          <div className="mt-1 text-2xl font-semibold tabular-nums text-amber-200">
             {fmt12From24(props.jummah2Time)}
           </div>
         </div>
