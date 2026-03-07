@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Coordinates, CalculationMethod, Madhab, PrayerTimes } from "adhan";
 import { masjid } from "@/config/masjid";
 import { fmt12From24, fmtDateTime12 } from "@/lib/time";
+import Image from "next/image";
 
 /* ================= Types ================= */
 
@@ -18,6 +19,25 @@ type Jamaat = {
 };
 
 type PrayerKey = "fajr" | "sunrise" | "dhuhr" | "asr" | "maghrib" | "isha";
+
+/* ================= Quran Ayahs ================= */
+
+const QURAN_AYAHS = [
+  { arabic: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", english: "In the name of Allah, the Most Gracious, the Most Merciful", ref: "1:1" },
+  { arabic: "إِنَّ مَعَ الْعُسْرِ يُسْرًا", english: "Indeed, with hardship comes ease", ref: "94:6" },
+  { arabic: "فَاذْكُرُونِي أَذْكُرْكُمْ وَاشْكُرُوا لِي وَلَا تَكْفُرُونِ", english: "Remember Me, and I will remember you. Be grateful to Me and never deny Me", ref: "2:152" },
+  { arabic: "وَمَن يَتَوَكَّلْ عَلَى اللَّهِ فَهُوَ حَسْبُهُ", english: "Whoever puts their trust in Allah, He is sufficient for them", ref: "65:3" },
+  { arabic: "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ", english: "Our Lord, give us good in this world and good in the Hereafter, and protect us from the torment of the Fire", ref: "2:201" },
+  { arabic: "وَقُل رَّبِّ زِدْنِي عِلْمًا", english: "And say: My Lord, increase me in knowledge", ref: "20:114" },
+  { arabic: "إِنَّ اللَّهَ مَعَ الصَّابِرِينَ", english: "Indeed, Allah is with the patient", ref: "2:153" },
+  { arabic: "وَلَسَوْفَ يُعْطِيكَ رَبُّكَ فَتَرْضَىٰ", english: "And your Lord will give you, and you will be satisfied", ref: "93:5" },
+  { arabic: "أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ", english: "Verily, in the remembrance of Allah do hearts find rest", ref: "13:28" },
+  { arabic: "وَنَحْنُ أَقْرَبُ إِلَيْهِ مِنْ حَبْلِ الْوَرِيدِ", english: "And We are closer to him than his jugular vein", ref: "50:16" },
+  { arabic: "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا ∗ إِنَّ مَعَ الْعُسْرِ يُسْرًا", english: "So surely with hardship comes ease. Surely with that hardship comes more ease", ref: "94:5-6" },
+  { arabic: "وَهُوَ مَعَكُمْ أَيْنَ مَا كُنتُمْ", english: "And He is with you wherever you are", ref: "57:4" },
+  { arabic: "ادْعُونِي أَسْتَجِبْ لَكُمْ", english: "Call upon Me, I will respond to you", ref: "40:60" },
+  { arabic: "وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌ", english: "And when My servants ask you about Me, indeed I am near", ref: "2:186" },
+];
 
 /* ================= Fallback ================= */
 
@@ -178,6 +198,8 @@ export default function DisplayPage() {
   const [jamaat, setJamaat] = useState<Jamaat>(FALLBACK);
   const [now, setNow] = useState<Date>(() => new Date());
   const [isPortraitScreen, setIsPortraitScreen] = useState(false);
+  const [ayahIndex, setAyahIndex] = useState(0);
+  const [ayahFading, setAyahFading] = useState(false);
 
   // Live clock
   useEffect(() => {
@@ -193,6 +215,18 @@ export default function DisplayPage() {
     updateOrientation();
     window.addEventListener("resize", updateOrientation);
     return () => window.removeEventListener("resize", updateOrientation);
+  }, []);
+
+  // Rotate Quran ayahs
+  useEffect(() => {
+    const id = setInterval(() => {
+      setAyahFading(true);
+      setTimeout(() => {
+        setAyahIndex((prev) => (prev + 1) % QURAN_AYAHS.length);
+        setAyahFading(false);
+      }, 600);
+    }, 12000);
+    return () => clearInterval(id);
   }, []);
 
   // Poll for jamaat updates
@@ -237,6 +271,10 @@ export default function DisplayPage() {
   const friday = isFriday(now);
   const todayDate = formatDate(now);
 
+  // Use actual jamaat data for Jummah times
+  const jummah1Time = jamaat.jummah?.[0]?.salah || "12:15";
+  const jummah2Time = jamaat.jummah?.[1]?.salah || jamaat.jummah2?.[0]?.salah || "13:15";
+
   const tiles = friday
     ? [
         { key: "fajr" as PrayerKey, title: "Fajr", jamaat: jamaat.fajr },
@@ -259,33 +297,42 @@ export default function DisplayPage() {
 
   const nextLabel = friday && next.key === "dhuhr" ? "JUMMAH" : next.key.toUpperCase();
 
+  const currentAyah = QURAN_AYAHS[ayahIndex];
+
   return (
-    <main className="h-screen w-screen overflow-hidden islamic-bg text-white">
+    <main className="h-screen w-screen overflow-hidden islamic-bg text-white flex flex-col">
       {/* Decorative Islamic pattern overlay */}
       <div className="islamic-pattern-overlay" />
 
       <div
         className={[
-          "h-full w-full p-4 md:p-6 grid gap-4 md:gap-5 grid-rows-[auto_1fr_auto] relative z-10",
+          "flex-1 min-h-0 w-full p-4 md:p-6 grid gap-4 md:gap-5 grid-rows-[auto_1fr_auto] relative z-10",
         ].join(" ")}
       >
         {/* Header */}
         <header className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-3">
-              <span className="text-[clamp(24px,3vw,48px)]">&#x2726;</span>
+          <div className="flex items-center gap-4">
+            <Image
+              src="/logo.svg"
+              alt={masjid.name}
+              width={80}
+              height={80}
+              className={isPortraitScreen ? "w-[60px] h-[60px]" : "w-[80px] h-[80px]"}
+              priority
+            />
+            <div>
               <h1
                 className={[
                   "font-semibold tracking-tight",
-                  isPortraitScreen ? "text-[clamp(24px,4.5vw,52px)]" : "text-[clamp(26px,3vw,52px)]",
+                  isPortraitScreen ? "text-[clamp(20px,4vw,44px)]" : "text-[clamp(24px,2.8vw,48px)]",
                 ].join(" ")}
               >
                 {masjid.name}
               </h1>
+              <p className="mt-1 opacity-60 text-[clamp(11px,1vw,16px)]">
+                {todayDate}
+              </p>
             </div>
-            <p className="mt-1 opacity-60 text-[clamp(11px,1vw,16px)]">
-              {todayDate}
-            </p>
           </div>
 
           <div className="rounded-2xl islamic-card px-6 py-4 text-center">
@@ -316,8 +363,8 @@ export default function DisplayPage() {
                 <JummahTile
                   key={t.key}
                   adhan={adhan}
-                  jummah1={fmt12From24("12:15")}
-                  jummah2={fmt12From24("13:15")}
+                  jummah1={fmt12From24(jummah1Time)}
+                  jummah2={fmt12From24(jummah2Time)}
                   highlight={isNext}
                 />
               );
@@ -343,9 +390,9 @@ export default function DisplayPage() {
             <div className="text-[clamp(14px,1.4vw,26px)]">
               Jumu&apos;ah:{" "}
               <span className="font-semibold text-amber-300">
-                1st &mdash; {fmt12From24("12:15")}
+                1st &mdash; {fmt12From24(jummah1Time)}
                 &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-                2nd &mdash; {fmt12From24("13:15")}
+                2nd &mdash; {fmt12From24(jummah2Time)}
               </span>
             </div>
           </div>
@@ -359,6 +406,17 @@ export default function DisplayPage() {
             </div>
           </div>
         </footer>
+      </div>
+
+      {/* Floating Quran Ayah Bar */}
+      <div className="quran-bar relative z-10">
+        <div className={`quran-ayah-content ${ayahFading ? "quran-ayah-fade-out" : "quran-ayah-fade-in"}`}>
+          <span className="quran-bismillah-icon">&#xFDFD;</span>
+          <span className="quran-arabic">{currentAyah.arabic}</span>
+          <span className="quran-separator">|</span>
+          <span className="quran-english">&ldquo;{currentAyah.english}&rdquo;</span>
+          <span className="quran-ref">[{currentAyah.ref}]</span>
+        </div>
       </div>
     </main>
   );

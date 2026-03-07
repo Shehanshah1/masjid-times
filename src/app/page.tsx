@@ -2,6 +2,7 @@ import { getAdhanTimes, fmtTime } from "@/lib/prayer";
 import { getJamaatTimes } from "@/lib/db";
 import { masjid } from "@/config/masjid";
 import { fmt12From24 } from "@/lib/time";
+import Image from "next/image";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,10 @@ export default async function Home() {
     timeZone: masjid.timezone,
   }).format(new Date());
 
+  // Use actual Jummah times from jamaat data
+  const jummah1Time = jamaat.jummah?.[0]?.salah || "12:15";
+  const jummah2Time = jamaat.jummah?.[1]?.salah || "13:15";
+
   const rows = [
     { label: "Fajr", adhan: fmtTime(adhan.fajr), jamaat: jamaat.fajr },
     { label: "Sunrise", adhan: fmtTime(adhan.sunrise) },
@@ -43,21 +48,30 @@ export default async function Home() {
       <div className="relative z-10">
         <div className="mx-auto max-w-5xl px-6 py-10">
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-xs text-amber-200">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                Live Adhan + Jamaat
+            <div className="flex items-center gap-5">
+              <Image
+                src="/logo.svg"
+                alt={masjid.name}
+                width={90}
+                height={90}
+                className="w-[70px] h-[70px] md:w-[90px] md:h-[90px]"
+                priority
+              />
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-xs text-amber-200">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                  Live Adhan + Jamaat
+                </div>
+
+                <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
+                  {masjid.name}
+                </h1>
+
+                <p className="mt-2 text-white/70">
+                  Prayer times calculated using {masjid.calc.method.replaceAll("_", " ")} &bull;{" "}
+                  {masjid.calc.fajrAngle}&deg; / {masjid.calc.ishaAngle}&deg; &bull; Hanafi Asr
+                </p>
               </div>
-
-              <h1 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl flex items-center gap-3">
-                <span>&#x2726;</span>
-                {masjid.name}
-              </h1>
-
-              <p className="mt-2 text-white/70">
-                Prayer times calculated using {masjid.calc.method.replaceAll("_", " ")} &bull;{" "}
-                {masjid.calc.fajrAngle}&deg; / {masjid.calc.ishaAngle}&deg; &bull; Hanafi Asr
-              </p>
             </div>
 
             <div className="rounded-2xl islamic-card px-5 py-4">
@@ -79,7 +93,7 @@ export default async function Home() {
               <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
                 {rows.map((r) =>
                   "isJummah" in r && r.isJummah ? (
-                    <JummahCard key={r.label} adhan={r.adhan} />
+                    <JummahCard key={r.label} adhan={r.adhan} jummah1Time={jummah1Time} jummah2Time={jummah2Time} />
                   ) : (
                     <TimeCard
                       key={r.label}
@@ -108,8 +122,8 @@ export default async function Home() {
                 </p>
 
                 <div className="mt-4 grid gap-3">
-                  <InfoRow label="1st Jummah" value={fmt12From24("12:15")} />
-                  <InfoRow label="2nd Jummah" value={fmt12From24("13:15")} />
+                  <InfoRow label="1st Jummah" value={fmt12From24(jummah1Time)} />
+                  <InfoRow label="2nd Jummah" value={fmt12From24(jummah2Time)} />
                 </div>
               </section>
 
@@ -173,7 +187,7 @@ function TimeCard(props: { label: string; adhan: string; jamaat?: string }) {
   );
 }
 
-function JummahCard(props: { adhan: string }) {
+function JummahCard(props: { adhan: string; jummah1Time: string; jummah2Time: string }) {
   return (
     <div className="rounded-xl border border-amber-400/30 bg-amber-900/15 p-4 md:col-span-2">
       <div className="flex items-center justify-between">
@@ -193,13 +207,13 @@ function JummahCard(props: { adhan: string }) {
         <div className="text-center">
           <div className="text-[11px] text-amber-300/70">1st Jummah</div>
           <div className="mt-1 text-xl font-semibold tabular-nums text-amber-200">
-            {fmt12From24("12:15")}
+            {fmt12From24(props.jummah1Time)}
           </div>
         </div>
         <div className="text-right">
           <div className="text-[11px] text-amber-300/70">2nd Jummah</div>
           <div className="mt-1 text-xl font-semibold tabular-nums text-amber-200">
-            {fmt12From24("13:15")}
+            {fmt12From24(props.jummah2Time)}
           </div>
         </div>
       </div>

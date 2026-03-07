@@ -82,3 +82,65 @@ body {
     0 0 0 1px rgba(217, 175, 78, 0.25),
     inset 0 1px 0 rgba(217, 175, 78, 0.12);
 }
+
+/* ================= Quran Ayah Bar ================= */
+
+.quran-bar {
+  background: linear-gradient(90deg, rgba(217, 175, 78, 0.12), rgba(16, 185, 129, 0.08), rgba(217, 175, 78, 0.12));
+  border-top: 1px solid rgba(217, 175, 78, 0.2);
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  min-height: 52px;
+  backdrop-filter: blur(8px);
+}
+
+.quran-ayah-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  white-space: nowrap;
+  transition: opacity 0.6s ease-in-out;
+}
+
+.quran-ayah-fade-in {
+  opacity: 1;
+}
+
+.quran-ayah-fade-out {
+  opacity: 0;
+}
+
+.quran-bismillah-icon {
+  font-size: clamp(18px, 2vw, 28px);
+  color: rgba(217, 175, 78, 0.7);
+  flex-shrink: 0;
+}
+
+.quran-arabic {
+  font-family: "Traditional Arabic", "Scheherazade", "Amiri", serif;
+  font-size: clamp(16px, 1.8vw, 26px);
+  color: rgba(255, 255, 255, 0.95);
+  direction: rtl;
+  line-height: 1.6;
+}
+
+.quran-separator {
+  color: rgba(217, 175, 78, 0.4);
+  font-size: clamp(14px, 1.4vw, 20px);
+  flex-shrink: 0;
+}
+
+.quran-english {
+  font-size: clamp(12px, 1.2vw, 18px);
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+}
+
+.quran-ref {
+  font-size: clamp(10px, 0.9vw, 14px);
+  color: rgba(217, 175, 78, 0.5);
+  flex-shrink: 0;
+}
