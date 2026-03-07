@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 340" fill="none">
+  <!-- Crescent and Star -->
+  <g transform="translate(150, 28)">
+    <!-- Star -->
+    <polygon points="0,-10 2.9,-3.1 10,-3.1 4.5,1.7 6.9,8.5 0,4.5 -6.9,8.5 -4.5,1.7 -10,-3.1 -2.9,-3.1" fill="#1a7a6d"/>
+    <!-- Crescent -->
+    <path d="M-6,14 A8,8 0 1,1 6,14 A6,6 0 1,0 -6,14Z" fill="#1a7a6d"/>
+    <!-- Finial pole -->
+    <line x1="0" y1="20" x2="0" y2="36" stroke="#1a7a6d" stroke-width="2.5"/>
+  </g>
+
+  <!-- Dome -->
+  <g transform="translate(150, 120)">
+    <!-- Main dome -->
+    <path d="M-55,30 Q-55,-55 0,-60 Q55,-55 55,30 Z" fill="#1a7a6d"/>
+    <!-- Dome highlight -->
+    <path d="M15,-45 Q40,-30 40,25" stroke="white" stroke-width="3" fill="none" opacity="0.3"/>
+    <!-- Lower dome section -->
+    <path d="M-65,30 Q-65,5 -55,0 L-55,30 Z" fill="#1a7a6d"/>
+    <path d="M55,0 Q65,5 65,30 L55,30 Z" fill="#1a7a6d"/>
+    <!-- Base curve -->
+    <ellipse cx="0" cy="32" rx="68" ry="8" fill="#1a7a6d"/>
+  </g>
+
+  <!-- Open Book -->
+  <g transform="translate(150, 175)">
+    <!-- Left page -->
+    <path d="M-8,0 Q-70,-5 -110,35 L-110,40 Q-70,5 -8,5 Z" fill="#1a7a6d"/>
+    <!-- Right page -->
+    <path d="M8,0 Q70,-5 110,35 L110,40 Q70,5 8,5 Z" fill="#1a7a6d"/>
+    <!-- Center spine highlight -->
+    <path d="M-8,0 L0,8 L8,0" fill="white" opacity="0.15"/>
+  </g>
+
+  <!-- Text: ISLAMIC CENTER -->
+  <text x="150" y="248" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="28" fill="#1a7a6d" letter-spacing="4">ISLAMIC CENTER</text>
+
+  <!-- Text: OF HATTIESBURG -->
+  <text x="150" y="280" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="22" fill="#1a7a6d" letter-spacing="6">OF HATTIESBURG</text>
+</svg>
