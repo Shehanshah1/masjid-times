@@ -37,7 +37,7 @@ export function getAdhanTimes(date: Date) {
       params = CalculationMethod.NorthAmerica();
   }
 
-  // 4. Apply custom calculation parameters from config
+  // 4. Apply custom calculation parameters from configQ  A`1
   if (typeof masjid.calc.fajrAngle === "number") {
     params.fajrAngle = masjid.calc.fajrAngle;
   }
