@@ -376,6 +376,7 @@ export default function DisplayPage() {
                 adhan={adhan}
                 jamaat={"jamaat" in t && t.jamaat ? fmt12From24(t.jamaat) : undefined}
                 highlight={isNext}
+                sunrise={t.key === "fajr" ? formatTime(adhanToday.sunrise) : undefined}
               />
             );
           })}
@@ -509,11 +510,13 @@ function Tile({
   adhan,
   jamaat,
   highlight,
+  sunrise,
 }: {
   title: string;
   adhan: string;
   jamaat?: string;
   highlight?: boolean;
+  sunrise?: string;
 }) {
   return (
     <div
@@ -524,8 +527,15 @@ function Tile({
           : "islamic-tile",
       ].join(" ")}
     >
-      <div className="font-semibold opacity-80 text-[clamp(18px,1.6vw,34px)]">
-        {title}
+      <div className="flex items-center gap-3">
+        <span className="font-semibold opacity-80 text-[clamp(18px,1.6vw,34px)]">
+          {title}
+        </span>
+        {sunrise && (
+          <span className="opacity-50 text-[clamp(11px,0.9vw,16px)]">
+            Sunrise: {sunrise}
+          </span>
+        )}
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-5 items-end min-h-0">
