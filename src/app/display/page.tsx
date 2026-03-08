@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Coordinates, CalculationMethod, Madhab, PrayerTimes } from "adhan";
 import { masjid } from "@/config/masjid";
 import { fmt12From24, fmtDateTime12 } from "@/lib/time";
@@ -139,8 +139,8 @@ function calculateAdhanTimes(date: Date) {
   const coords = new Coordinates(masjid.coordinates.lat, masjid.coordinates.lon);
   const params = CalculationMethod.NorthAmerica();
 
-  params.fajrAngle = masjid.calc.fajrAngle;
-  params.ishaAngle = masjid.calc.ishaAngle;
+  if (masjid.calc.fajrAngle !== undefined) params.fajrAngle = masjid.calc.fajrAngle;
+  if (masjid.calc.ishaAngle !== undefined) params.ishaAngle = masjid.calc.ishaAngle;
   params.madhab = Madhab.Hanafi;
 
   const pt = new PrayerTimes(coords, date, params);
