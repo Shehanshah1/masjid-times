@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 function isValidJamaat(x: unknown): x is Jamaat {
   if (!x || typeof x !== "object") return false;
-  const v = x as any;
+  const v = x as Record<string, unknown>;
   return (
     typeof v.fajr === "string" &&
     typeof v.dhuhr === "string" &&

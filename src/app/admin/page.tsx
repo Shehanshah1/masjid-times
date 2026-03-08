@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { fmt12From24 } from "@/lib/time";
 import { masjid } from "@/config/masjid";
 import Image from "next/image";
+import Link from "next/link";
 
 type JummahSlot = { khutbah: string; salah: string };
 
@@ -65,7 +66,7 @@ export default function AdminPage() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [status, setStatus] = useState("");
   const [data, setData] = useState<Jamaat>(EMPTY);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [loggingIn, setLoggingIn] = useState(false);
 
@@ -200,9 +201,9 @@ export default function AdminPage() {
               {status && <p className="text-sm text-center text-red-600">{status}</p>}
             </div>
             <div className="text-center">
-              <a href="/" className="text-sm text-[#1a1a2e]/50 hover:text-[#1a1a2e]/80 transition-colors">
+              <Link href="/" className="text-sm text-[#1a1a2e]/50 hover:text-[#1a1a2e]/80 transition-colors">
                 &larr; Back to Home
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -231,9 +232,9 @@ export default function AdminPage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <a href="/" className="px-4 py-2 rounded-xl border border-[#1a1a2e]/10 text-[#1a1a2e]/70 hover:bg-[#1a1a2e]/5 transition-colors text-sm">
+              <Link href="/" className="px-4 py-2 rounded-xl border border-[#1a1a2e]/10 text-[#1a1a2e]/70 hover:bg-[#1a1a2e]/5 transition-colors text-sm">
                 Home
-              </a>
+              </Link>
               <button onClick={save} disabled={saving} className="bg-emerald-500 px-6 py-2 rounded-xl text-black font-bold hover:bg-emerald-400 transition-colors disabled:opacity-50">
                 {saving ? "Saving..." : "Save Changes"}
               </button>
@@ -340,9 +341,9 @@ export default function AdminPage() {
 
           {/* Footer */}
           <div className="text-center pt-4">
-            <a href="/" className="text-sm text-[#1a1a2e]/40 hover:text-[#1a1a2e]/70 transition-colors">
+            <Link href="/" className="text-sm text-[#1a1a2e]/40 hover:text-[#1a1a2e]/70 transition-colors">
               &larr; Back to Home
-            </a>
+            </Link>
           </div>
         </div>
       </div>
