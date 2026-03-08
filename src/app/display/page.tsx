@@ -20,6 +20,8 @@ type Jamaat = {
 
 type PrayerKey = "fajr" | "sunrise" | "dhuhr" | "asr" | "maghrib" | "isha";
 
+type SalahKey = "fajr" | "dhuhr" | "asr" | "maghrib" | "isha";
+
 /* ================= Quran Ayahs ================= */
 
 const QURAN_AYAHS = [
@@ -158,7 +160,7 @@ function getNextPrayerInfo(
   todayTimes: ReturnType<typeof calculateAdhanTimes>,
   tomorrowTimes: ReturnType<typeof calculateAdhanTimes>
 ): { key: PrayerKey; at: Date } {
-  const order: PrayerKey[] = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"];
+  const order: PrayerKey[] = ["fajr", "dhuhr", "asr", "maghrib", "isha"];
 
   for (const key of order) {
     if (todayTimes[key] > now) return { key, at: todayTimes[key] };
@@ -277,20 +279,18 @@ export default function DisplayPage() {
 
   const tiles = friday
     ? [
-        { key: "fajr" as PrayerKey, title: "Fajr", jamaat: jamaat.fajr },
-        { key: "sunrise" as PrayerKey, title: "Sunrise" },
-        { key: "dhuhr" as PrayerKey, title: "Jummah", isJummah: true },
-        { key: "asr" as PrayerKey, title: "Asr", jamaat: jamaat.asr },
-        { key: "maghrib" as PrayerKey, title: "Maghrib", jamaat: jamaat.maghrib },
-        { key: "isha" as PrayerKey, title: "Isha", jamaat: jamaat.isha },
+        { key: "fajr" as SalahKey, title: "Fajr", jamaat: jamaat.fajr },
+        { key: "dhuhr" as SalahKey, title: "Jummah", isJummah: true },
+        { key: "asr" as SalahKey, title: "Asr", jamaat: jamaat.asr },
+        { key: "maghrib" as SalahKey, title: "Maghrib", jamaat: jamaat.maghrib },
+        { key: "isha" as SalahKey, title: "Isha", jamaat: jamaat.isha },
       ]
     : [
-        { key: "fajr" as PrayerKey, title: "Fajr", jamaat: jamaat.fajr },
-        { key: "sunrise" as PrayerKey, title: "Sunrise" },
-        { key: "dhuhr" as PrayerKey, title: "Dhuhr", jamaat: jamaat.dhuhr },
-        { key: "asr" as PrayerKey, title: "Asr", jamaat: jamaat.asr },
-        { key: "maghrib" as PrayerKey, title: "Maghrib", jamaat: jamaat.maghrib },
-        { key: "isha" as PrayerKey, title: "Isha", jamaat: jamaat.isha },
+        { key: "fajr" as SalahKey, title: "Fajr", jamaat: jamaat.fajr },
+        { key: "dhuhr" as SalahKey, title: "Dhuhr", jamaat: jamaat.dhuhr },
+        { key: "asr" as SalahKey, title: "Asr", jamaat: jamaat.asr },
+        { key: "maghrib" as SalahKey, title: "Maghrib", jamaat: jamaat.maghrib },
+        { key: "isha" as SalahKey, title: "Isha", jamaat: jamaat.isha },
       ];
 
   const clock = formatClock(now);
@@ -356,7 +356,6 @@ export default function DisplayPage() {
           {tiles.map((t) => {
             const adhan = formatTime(adhanToday[t.key]);
             const isNext = next.key === t.key && next.at.getTime() === adhanToday[t.key].getTime();
-            const isSunrise = t.key === "sunrise";
 
             if ("isJummah" in t && t.isJummah) {
               return (
@@ -375,12 +374,15 @@ export default function DisplayPage() {
                 key={t.key}
                 title={t.title}
                 adhan={adhan}
-                hideAdhanLabel={isSunrise}
                 jamaat={"jamaat" in t && t.jamaat ? fmt12From24(t.jamaat) : undefined}
                 highlight={isNext}
+                sunrise={t.key === "fajr" ? formatTime(adhanToday.sunrise) : undefined}
               />
             );
           })}
+
+          {/* Donation QR Code Tile */}
+          <DonationTile />
         </section>
 
         {/* Footer */}
@@ -473,6 +475,34 @@ function JummahTile({
   );
 }
 
+/* ================= Donation Tile ================= */
+
+function DonationTile() {
+  return (
+    <div className="rounded-2xl border p-5 flex flex-col items-center justify-center min-h-0 islamic-tile">
+      <div className="font-semibold text-emerald-800 text-[clamp(16px,1.4vw,28px)]">
+        Support Your Masjid
+      </div>
+      <div className="mt-2 flex-1 flex items-center justify-center min-h-0">
+        <Image
+          src="/donation-qr.png"
+          alt="Scan to donate"
+          width={200}
+          height={200}
+          className="rounded-lg max-h-full w-auto object-contain"
+        />
+      </div>
+      <p className="mt-2 text-center text-[clamp(11px,0.9vw,16px)] opacity-70 leading-snug">
+        Scan to donate &bull; Jazakum Allahu Khairan
+      </p>
+      <p className="mt-1 text-center text-emerald-700 font-medium text-[clamp(10px,0.8vw,14px)] leading-snug italic">
+        &ldquo;Who is it that would loan Allah a goodly loan so He may multiply
+        it for him many times over?&rdquo; &mdash; 2:245
+      </p>
+    </div>
+  );
+}
+
 /* ================= Tile ================= */
 
 function Tile({
@@ -480,13 +510,13 @@ function Tile({
   adhan,
   jamaat,
   highlight,
-  hideAdhanLabel,
+  sunrise,
 }: {
   title: string;
   adhan: string;
   jamaat?: string;
   highlight?: boolean;
-  hideAdhanLabel?: boolean;
+  sunrise?: string;
 }) {
   return (
     <div
@@ -497,14 +527,21 @@ function Tile({
           : "islamic-tile",
       ].join(" ")}
     >
-      <div className="font-semibold opacity-80 text-[clamp(18px,1.6vw,34px)]">
-        {title}
+      <div className="flex items-center gap-3">
+        <span className="font-semibold opacity-80 text-[clamp(18px,1.6vw,34px)]">
+          {title}
+        </span>
+        {sunrise && (
+          <span className="opacity-50 text-[clamp(11px,0.9vw,16px)]">
+            Sunrise: {sunrise}
+          </span>
+        )}
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-5 items-end min-h-0">
         <div className="min-w-0">
           <div className="opacity-50 text-[clamp(11px,0.9vw,16px)]">
-            {hideAdhanLabel ? "\u00A0" : "Adhan"}
+            Adhan
           </div>
           <div className="mt-2 font-semibold tracking-tight tabular-nums text-[clamp(28px,3vw,64px)] leading-none text-[#1a1a2e]">
             {adhan}
